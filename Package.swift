@@ -129,7 +129,8 @@ extension Package.Dependency {
         .upToNextMajor(from: "1.0.0")
     )
     static let GitHubGraphQLAPI = Package.Dependency.package(
-        path: "GitHubGraphQLAPI"
+        url: "https://github.com/Mx-Iris/GitHubGraphQLAPI",
+        branch: "main"
     )
     static let RxApolloClient = Package.Dependency.package(
         url: "https://github.com/MxIris-Library-Forks/RxApolloClient",

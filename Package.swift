@@ -122,7 +122,7 @@ extension Package.Dependency {
     )
     static let MetaCodable = Package.Dependency.package(
         url: "https://github.com/SwiftyLab/MetaCodable",
-        branch: "main"
+        branch: "1.3.0"
     )
     static let Apollo = Package.Dependency.package(
         url: "https://github.com/apollographql/apollo-ios.git",

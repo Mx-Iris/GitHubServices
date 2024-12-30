@@ -28,12 +28,21 @@
       }
     },
     {
+      "identity" : "githubgraphqlapi",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Mx-Iris/GitHubGraphQLAPI",
+      "state" : {
+        "branch" : "main",
+        "revision" : "dd7d12487d637c71707597a75be84ee3c11f86f9"
+      }
+    },
+    {
       "identity" : "metacodable",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SwiftyLab/MetaCodable",
       "state" : {
-        "branch" : "main",
-        "revision" : "5916d935349a5d07ebcfa424334d00fb7290ea10"
+        "revision" : "8dded11cad29ad5c6eeb24698e7c1c8708ceb5e0",
+        "version" : "1.3.0"
       }
     },
     {

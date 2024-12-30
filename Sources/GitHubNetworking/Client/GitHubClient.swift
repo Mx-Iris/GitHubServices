@@ -1,6 +1,7 @@
 import Moya
 import Apollo
 import ApolloAPI
+import Alamofire
 import Foundation
 import GitHubModels
 import GitHubGraphQLAPI
@@ -41,6 +42,31 @@ public final class GitHubClient: GitHubAPI {
 
 @AddAsyncAllMembers
 extension GitHubClient {
+    public static func createAccessToken(clientId: String, clientSecret: String, code: String, redirectURI: String?, state: String?, completion: @escaping (Result<Token, Error>) -> Void) {
+        var params: Parameters = [:]
+        params["client_id"] = clientId
+        params["client_secret"] = clientSecret
+        params["code"] = code
+        params["redirect_uri"] = redirectURI
+        params["state"] = state
+        AF.request(
+            "https://github.com/login/oauth/access_token",
+            method: .post,
+            parameters: params,
+            encoding: URLEncoding.default,
+            headers: ["Accept": "application/json"]
+        )
+        .responseDecodable(of: Token.self, completionHandler: { response in
+            switch response.result {
+            case let .success(token):
+                completion(.success(token))
+            case let .failure(error):
+                completion(.failure(error))
+            }
+
+        })
+    }
+
     /// @AddAsyncImplementation
     public func searchRepositories(query: String, sort: String, order: String, page: Int, endCursor: String?, completion: @escaping (Result<GitHubModels.RepositorySearch, Error>) -> Void) {
         requestObject(.searchRepositories(query: query, sort: sort, order: order, page: page), type: RepositorySearch.self, completion: completion)

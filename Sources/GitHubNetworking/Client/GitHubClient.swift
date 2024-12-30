@@ -66,7 +66,10 @@ extension GitHubClient {
 
         })
     }
+}
 
+@AddAsyncAllMembers
+extension GitHubClient {
     /// @AddAsyncImplementation
     public func searchRepositories(query: String, sort: String, order: String, page: Int, endCursor: String?, completion: @escaping (Result<GitHubModels.RepositorySearch, Error>) -> Void) {
         requestObject(.searchRepositories(query: query, sort: sort, order: order, page: page), type: RepositorySearch.self, completion: completion)

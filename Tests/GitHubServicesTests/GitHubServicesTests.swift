@@ -4,7 +4,7 @@ import GitHubNetworking
 import GitHubServices
 
 final class GitHubServicesTests: XCTestCase {
-    lazy var tokenString = "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"
+    lazy var tokenString = ""
 
     lazy var token = Token(accessToken: tokenString)
 
@@ -18,7 +18,7 @@ final class GitHubServicesTests: XCTestCase {
     
     func testCreateOrUpdateWorkflows() async throws {
         let repository = try await client.repository(fullname: "MxIris-macOS-Library-Forks/AdvancedCollectionTableView", qualifiedName: "")
-        let result = try await workflowService.createOrUpdateWorkflowFile(forTemplate: UpstreamSyncWorkflowFileTemplate.self, repository: repository, filename: "UpstreamSync.yml", message: "Create or update workflow file")
+        let result = try await workflowService.createOrUpdateWorkflowFile(forTemplate: UpstreamSyncWorkflowFileTemplate.self as! WorkflowFileTemplate, repository: repository, filename: "UpstreamSync.yml", message: "Create or update workflow file")
         print(result.commit)
     }
 

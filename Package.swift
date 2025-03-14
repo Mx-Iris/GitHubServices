@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 5.10
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -90,11 +90,11 @@ extension Target.Dependency {
 extension Package.Dependency {
     static let SwiftSyntax = Package.Dependency.package(
         url: "https://github.com/swiftlang/swift-syntax.git",
-        from: "509.0.0"
+        "510.0.0"..<"511.0.0"
     )
     static let SwiftMacroToolkit = Package.Dependency.package(
-        url: "https://github.com/MxIris-Library-Forks/swift-macro-toolkit",
-        exact: "0.3.2"
+        url: "https://github.com/stackotter/swift-macro-toolkit",
+        exact: "0.4.0"
     )
     static let Moya = Package.Dependency.package(
         url: "https://github.com/Moya/Moya",
@@ -113,8 +113,8 @@ extension Package.Dependency {
         .upToNextMajor(from: "5.0.0")
     )
     static let MetaCodable = Package.Dependency.package(
-        url: "https://github.com/SwiftyLab/MetaCodable",
-        exact: "1.3.0"
+        url: "https://github.com/MxIris-Library-Forks/MetaCodable",
+        branch: "main"
     )
     static let Apollo = Package.Dependency.package(
         url: "https://github.com/apollographql/apollo-ios.git",
@@ -218,6 +218,7 @@ let package = Package(
                 "GitHubModels",
                 "GitHubNetworking",
                 "GitHubServicesHelpers",
+                .Alamofire,
                 .RxSwift,
                 .RxCocoa,
                 .RxOptional,
@@ -308,5 +309,6 @@ let package = Package(
                 .SwiftSyntaxMacrosTestSupport,
             ]
         ),
-    ]
+    ],
+    swiftLanguageVersions: [.v5]
 )

@@ -41,10 +41,6 @@ extension Target.Dependency {
         name: "Moya",
         package: "Moya"
     )
-    static let SwiftDate = Target.Dependency.product(
-        name: "SwiftDate",
-        package: "SwiftDate"
-    )
     static let GitHubGraphQLAPI = Target.Dependency.product(
         name: "GitHubGraphQLAPI",
         package: "GitHubGraphQLAPI"
@@ -116,17 +112,13 @@ extension Package.Dependency {
         url: "https://github.com/RxSwiftCommunity/RxOptional",
         .upToNextMajor(from: "5.0.0")
     )
-    static let SwiftDate = Package.Dependency.package(
-        url: "https://github.com/malcommac/SwiftDate",
-        .upToNextMajor(from: "7.0.0")
-    )
     static let MetaCodable = Package.Dependency.package(
         url: "https://github.com/SwiftyLab/MetaCodable",
         exact: "1.3.0"
     )
     static let Apollo = Package.Dependency.package(
         url: "https://github.com/apollographql/apollo-ios.git",
-        .upToNextMajor(from: "1.0.0")
+        exact: "1.8.0"
     )
     static let GitHubGraphQLAPI = Package.Dependency.package(
         url: "https://github.com/Mx-Iris/GitHubGraphQLAPI",
@@ -186,7 +178,6 @@ let package = Package(
         .GitHubGraphQLAPI,
         .ArrayBuilder,
         .SwiftGit,
-        .SwiftDate,
         .SwiftMarkdownBuilder,
         .SwiftSyntax,
         .SwiftMacroToolkit,
@@ -210,9 +201,7 @@ let package = Package(
             dependencies: [
                 "GitHubModels",
                 "GitHubServicesHelpers",
-                .Alamofire,
                 .Moya,
-                .SwiftDate,
                 .GitHubGraphQLAPI,
                 .Apollo,
                 .ApolloAPI,

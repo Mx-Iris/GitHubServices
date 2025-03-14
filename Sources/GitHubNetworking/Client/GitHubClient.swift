@@ -1,7 +1,7 @@
 import Moya
 import Apollo
 import ApolloAPI
-import Alamofire
+//import Alamofire
 import Foundation
 import GitHubModels
 import GitHubGraphQLAPI
@@ -43,29 +43,65 @@ public final class GitHubClient: GitHubAPI {
 @AddAsyncAllMembers
 extension GitHubClient {
     public static func createAccessToken(clientId: String, clientSecret: String, code: String, redirectURI: String?, state: String?, completion: @escaping (Result<Token, Error>) -> Void) {
-        var params: Parameters = [:]
+        // 创建URL
+        guard let url = URL(string: "https://github.com/login/oauth/access_token") else {
+            completion(.failure(NSError(domain: "InvalidURL", code: -1, userInfo: nil)))
+            return
+        }
+        
+        // 准备请求参数
+        var params: [String: String] = [:]
         params["client_id"] = clientId
         params["client_secret"] = clientSecret
         params["code"] = code
-        params["redirect_uri"] = redirectURI
-        params["state"] = state
-        AF.request(
-            "https://github.com/login/oauth/access_token",
-            method: .post,
-            parameters: params,
-            encoding: URLEncoding.default,
-            headers: ["Accept": "application/json"]
-        )
-        .responseDecodable(of: Token.self, completionHandler: { response in
-            switch response.result {
-            case let .success(token):
+        
+        if let redirectURI = redirectURI {
+            params["redirect_uri"] = redirectURI
+        }
+        
+        if let state = state {
+            params["state"] = state
+        }
+        
+        // 创建请求
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        
+        // 设置请求体
+        let queryItems = params.map { URLQueryItem(name: $0.key, value: $0.value) }
+        var components = URLComponents()
+        components.queryItems = queryItems
+        request.httpBody = components.query?.data(using: .utf8)
+        
+        // 设置Content-Type
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        
+        // 创建任务
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let data = data else {
+                completion(.failure(NSError(domain: "NoData", code: -2, userInfo: nil)))
+                return
+            }
+            
+            do {
+                let decoder = JSONDecoder()
+                let token = try decoder.decode(Token.self, from: data)
                 completion(.success(token))
-            case let .failure(error):
+            } catch {
                 completion(.failure(error))
             }
-
-        })
+        }
+        
+        // 启动任务
+        task.resume()
     }
+
 }
 
 @AddAsyncAllMembers

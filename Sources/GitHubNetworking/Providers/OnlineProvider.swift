@@ -25,12 +25,15 @@ final class OnlineProvider<Target> where Target: Moya.TargetType {
         progress: ProgressBlock? = nil,
         completion: @escaping (Result<Moya.Response, Error>) -> Void
     ) -> Cancellable {
-        guard online() else { return CancellableToken(action: {}) }
+//        print(#function, target)
+//        guard online() else { return CancellableToken(action: {}) }
+//        print(target)
         return provider.request(target, callbackQueue: callbackQueue, progress: progress) { result in
 
             do {
                 switch result {
                 case let .success(response):
+//                    print(response.response?.allHeaderFields["Link"])
                     let filteredResponse = try response.filterSuccessfulStatusCodes()
                     completion(.success(filteredResponse))
                 case let .failure(error):

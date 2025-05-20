@@ -90,7 +90,7 @@ extension Target.Dependency {
 extension Package.Dependency {
     static let SwiftSyntax = Package.Dependency.package(
         url: "https://github.com/swiftlang/swift-syntax.git",
-        "510.0.0"..<"511.0.0"
+        "510.0.0"..<"602.0.0"
     )
     static let SwiftMacroToolkit = Package.Dependency.package(
         url: "https://github.com/stackotter/swift-macro-toolkit",

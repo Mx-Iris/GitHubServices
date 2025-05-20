@@ -90,11 +90,11 @@ extension Target.Dependency {
 extension Package.Dependency {
     static let SwiftSyntax = Package.Dependency.package(
         url: "https://github.com/swiftlang/swift-syntax.git",
-        "510.0.0"..<"602.0.0"
+        from: "601.0.1"
     )
     static let SwiftMacroToolkit = Package.Dependency.package(
-        url: "https://github.com/stackotter/swift-macro-toolkit",
-        exact: "0.4.0"
+        url: "https://github.com/MxIris-Library-Forks/swift-macro-toolkit",
+        branch: "main"
     )
     static let Moya = Package.Dependency.package(
         url: "https://github.com/Moya/Moya",

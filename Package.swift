@@ -113,8 +113,8 @@ extension Package.Dependency {
         .upToNextMajor(from: "5.0.0")
     )
     static let MetaCodable = Package.Dependency.package(
-        url: "https://github.com/SwiftyLab/MetaCodable",
-        from: "1.4.0"
+        url: "https://github.com/MxIris-Library-Forks/MetaCodable",
+        branch: "main"
     )
     static let Apollo = Package.Dependency.package(
         url: "https://github.com/apollographql/apollo-ios.git",

@@ -43,7 +43,7 @@
       "location" : "https://github.com/MxIris-Library-Forks/MetaCodable",
       "state" : {
         "branch" : "main",
-        "revision" : "cf4acd795d1890d17fec64df14d5aeecc3bb3357"
+        "revision" : "2da1ee96a4bf8273eb777edb56cd374834b938cf"
       }
     },
     {
@@ -105,8 +105,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-argument-parser.git",
       "state" : {
-        "revision" : "41982a3656a71c768319979febd796c6fd111d5c",
-        "version" : "1.5.0"
+        "revision" : "011f0c765fb46d9cac61bca19be0527e99c98c8b",
+        "version" : "1.5.1"
       }
     },
     {
@@ -151,7 +151,7 @@
       "location" : "https://github.com/MxIris-Library-Forks/swift-macro-toolkit",
       "state" : {
         "branch" : "main",
-        "revision" : "3a3c34a286414f64b3b465d29c36572875441204"
+        "revision" : "716d54404c1ab458bbeba60411d7e571e23670bf"
       }
     },
     {
@@ -160,7 +160,7 @@
       "location" : "https://github.com/apple/swift-markdown.git",
       "state" : {
         "branch" : "main",
-        "revision" : "5d4f6b83fb9509b49f7735e7591abb3e4b6dbc2f"
+        "revision" : "c281baa59e2b0d3ddc72848741217af811f66d39"
       }
     },
     {

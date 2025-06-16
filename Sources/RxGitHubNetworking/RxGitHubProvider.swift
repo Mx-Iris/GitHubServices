@@ -26,8 +26,7 @@ struct RxGitHubProvider: RxProvider {
                 endpointClosure: endpointsClosure(),
                 requestClosure: RxGitHubProvider.endpointResolver(),
                 stubClosure: MoyaProvider.immediatelyStub,
-                plugins: plugins,
-                online: .just(true)
+                plugins: plugins
             )
         )
     }

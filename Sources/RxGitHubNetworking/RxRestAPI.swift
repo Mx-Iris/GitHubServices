@@ -3,6 +3,7 @@ import RxCocoa
 import Foundation
 import GitHubModels
 import GitHubNetworking
+
 public protocol RxRestAPI {
 
     func searchRepositories(query: String, sort: String, order: String, page: Int, endCursor: String?) -> Single<RepositorySearch>

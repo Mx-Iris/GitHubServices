@@ -2,7 +2,6 @@ import Moya
 import Foundation
 
 final class OnlineProvider<Target> where Target: Moya.TargetType {
-    let online: () -> Bool
     let provider: MoyaProvider<Target>
 
     init(
@@ -11,10 +10,8 @@ final class OnlineProvider<Target> where Target: Moya.TargetType {
         stubClosure: @escaping MoyaProvider<Target>.StubClosure = MoyaProvider<Target>.neverStub,
         session: Session = MoyaProvider<Target>.defaultAlamofireSession(),
         plugins: [PluginType] = [],
-        trackInflights: Bool = false,
-        online: (() -> Bool)? = nil
+        trackInflights: Bool = false
     ) {
-        self.online = online ?? ReachabilityManager.connectedToInternetObserving()
         self.provider = MoyaProvider(endpointClosure: endpointClosure, requestClosure: requestClosure, stubClosure: stubClosure, session: session, plugins: plugins, trackInflights: trackInflights)
     }
 

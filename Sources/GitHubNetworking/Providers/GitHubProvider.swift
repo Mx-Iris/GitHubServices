@@ -24,8 +24,7 @@ struct GitHubProvider: Provider {
                 endpointClosure: endpointsClosure(),
                 requestClosure: GitHubProvider.endpointResolver(),
                 stubClosure: MoyaProvider.immediatelyStub,
-                plugins: plugins,
-                online: { true }
+                plugins: plugins
             )
         )
     }

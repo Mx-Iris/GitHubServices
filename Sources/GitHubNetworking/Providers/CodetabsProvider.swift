@@ -10,7 +10,7 @@ struct CodetabsProvider: Provider {
     }
 
     static func stubbingProvider() -> Self {
-        CodetabsProvider(provider: OnlineProvider(endpointClosure: endpointsClosure(), requestClosure: CodetabsProvider.endpointResolver(), stubClosure: MoyaProvider.immediatelyStub, online: { true }))
+        CodetabsProvider(provider: OnlineProvider(endpointClosure: endpointsClosure(), requestClosure: CodetabsProvider.endpointResolver(), stubClosure: MoyaProvider.immediatelyStub))
     }
 
     @discardableResult

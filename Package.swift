@@ -94,27 +94,27 @@ extension Package.Dependency {
     )
     static let SwiftMacroToolkit = Package.Dependency.package(
         url: "https://github.com/MxIris-Library-Forks/swift-macro-toolkit",
-        branch: "main"
+        from: "0.6.2-fork"
     )
     static let Moya = Package.Dependency.package(
         url: "https://github.com/Moya/Moya",
-        .upToNextMajor(from: "15.0.0")
+        from: "15.0.0"
     )
     static let Alamofire = Package.Dependency.package(
         url: "https://github.com/Alamofire/Alamofire.git",
-        .upToNextMajor(from: "5.0.0")
+        from: "5.0.0"
     )
     static let RxSwift = Package.Dependency.package(
         url: "https://github.com/ReactiveX/RxSwift",
-        .upToNextMajor(from: "6.0.0")
+        from: "6.0.0"
     )
     static let RxOptional = Package.Dependency.package(
         url: "https://github.com/RxSwiftCommunity/RxOptional",
-        .upToNextMajor(from: "5.0.0")
+        from: "5.0.0"
     )
     static let MetaCodable = Package.Dependency.package(
         url: "https://github.com/MxIris-Library-Forks/MetaCodable",
-        branch: "main"
+        from: "1.4.1-fork"
     )
     static let Apollo = Package.Dependency.package(
         url: "https://github.com/apollographql/apollo-ios.git",
@@ -130,7 +130,7 @@ extension Package.Dependency {
     )
     static let ArrayBuilder = Package.Dependency.package(
         url: "https://github.com/WilhelmOks/ArrayBuilder",
-        .upToNextMajor(from: "1.0.0")
+        from: "1.0.0"
     )
     static let SwiftMarkdownBuilder = Package.Dependency.package(
         url: "https://github.com/MxIris-Library-Forks/SwiftMarkdownBuilder",

@@ -10,7 +10,7 @@ struct TrendingGitHubProvider: Provider {
     }
 
     static func stubbingProvider() -> Self {
-        TrendingGitHubProvider(provider: OnlineProvider(endpointClosure: endpointsClosure(), requestClosure: endpointResolver(), stubClosure: MoyaProvider.immediatelyStub, online: { true }))
+        TrendingGitHubProvider(provider: OnlineProvider(endpointClosure: endpointsClosure(), requestClosure: endpointResolver(), stubClosure: MoyaProvider.immediatelyStub))
     }
 
     @discardableResult

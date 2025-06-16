@@ -1,5 +1,5 @@
 {
-  "originHash" : "7ce5f9502d3dcc982e9671eeb94f63c835406f1fe9fae12fb0d214303143f5e4",
+  "originHash" : "cb12dfa2f8e29dbf26f1f31e0f9d5ed569026d47c96487c5be7a1f6fb94d28a1",
   "pins" : [
     {
       "identity" : "alamofire",
@@ -42,8 +42,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/MxIris-Library-Forks/MetaCodable",
       "state" : {
-        "branch" : "main",
-        "revision" : "2da1ee96a4bf8273eb777edb56cd374834b938cf"
+        "revision" : "2da1ee96a4bf8273eb777edb56cd374834b938cf",
+        "version" : "1.4.1-fork.1"
       }
     },
     {
@@ -150,8 +150,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/MxIris-Library-Forks/swift-macro-toolkit",
       "state" : {
-        "branch" : "main",
-        "revision" : "716d54404c1ab458bbeba60411d7e571e23670bf"
+        "revision" : "ec8c5cf3b95cf9b0e1d4df6a0b2e0f524ae41558",
+        "version" : "0.6.2-fork.1"
       }
     },
     {

@@ -3,7 +3,6 @@ import RxMoya
 import Apollo
 import RxSwift
 import RxCocoa
-import Alamofire
 import ApolloAPI
 import Foundation
 import GitHubModels
@@ -70,33 +69,26 @@ public final class RxGitHubClient: RxGitHubAPI {
 }
 
 extension RxGitHubClient {
-    public static func createAccessToken(clientId: String, clientSecret: String, code: String, redirectUri: String?, state: String?) -> Single<Token> {
+    
+    public static func accessToken(clientID: String, clientSecret: String, code: String, redirectURI: String?, state: String?) -> Single<Token> {
         Single.create { single in
-            var params: Parameters = [:]
-            params["client_id"] = clientId
-            params["client_secret"] = clientSecret
-            params["code"] = code
-            params["redirect_uri"] = redirectUri
-            params["state"] = state
-            AF.request(
-                "https://github.com/login/oauth/access_token",
-                method: .post,
-                parameters: params,
-                encoding: URLEncoding.default,
-                headers: ["Accept": "application/json"]
-            )
-            .responseDecodable(of: Token.self, completionHandler: { response in
-                switch response.result {
+            GitHubClient.createAccessToken(clientId: clientID, clientSecret: clientSecret, code: code, redirectURI: redirectURI, state: state) { result in
+                switch result {
                 case let .success(token):
                     single(.success(token))
                 case let .failure(error):
                     single(.failure(error))
                 }
-
-            })
+            }
             return Disposables.create {}
         }
         .observe(on: MainScheduler.instance)
+    }
+    
+    
+    @available(*, deprecated, renamed: "accessToken(clientID:clientSecret:code:redirectURI:state:)")
+    public static func createAccessToken(clientId: String, clientSecret: String, code: String, redirectUri: String?, state: String?) -> Single<Token> {
+        return accessToken(clientID: clientId, clientSecret: clientSecret, code: code, redirectURI: redirectUri, state: state)
     }
 }
 

@@ -12,7 +12,7 @@ struct RxTrendingGitHubProvider: RxProvider {
     }
 
     static func stubbingProvider() -> Self {
-        RxTrendingGitHubProvider(provider: RxOnlineProvider(endpointClosure: endpointsClosure(), requestClosure: RxTrendingGitHubProvider.endpointResolver(), stubClosure: MoyaProvider.immediatelyStub, online: .just(true)))
+        RxTrendingGitHubProvider(provider: RxOnlineProvider(endpointClosure: endpointsClosure(), requestClosure: RxTrendingGitHubProvider.endpointResolver(), stubClosure: MoyaProvider.immediatelyStub))
     }
 
     func request(_ token: T) -> Observable<Moya.Response> {

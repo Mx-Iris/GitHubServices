@@ -72,7 +72,7 @@ extension RxGitHubClient {
     
     public static func accessToken(clientID: String, clientSecret: String, code: String, redirectURI: String?, state: String?) -> Single<Token> {
         Single.create { single in
-            GitHubClient.createAccessToken(clientId: clientID, clientSecret: clientSecret, code: code, redirectURI: redirectURI, state: state) { result in
+            GitHubClient.accessToken(clientID: clientID, clientSecret: clientSecret, code: code, redirectURI: redirectURI, state: state) { result in
                 switch result {
                 case let .success(token):
                     single(.success(token))

@@ -93,8 +93,8 @@ extension Package.Dependency {
         from: "601.0.1"
     )
     static let SwiftMacroToolkit = Package.Dependency.package(
-        url: "https://github.com/MxIris-Library-Forks/swift-macro-toolkit",
-        from: "0.6.2-fork"
+        url: "https://github.com/stackotter/swift-macro-toolkit",
+        from: "0.7.2"
     )
     static let Moya = Package.Dependency.package(
         url: "https://github.com/Moya/Moya",
@@ -113,8 +113,8 @@ extension Package.Dependency {
         from: "5.0.0"
     )
     static let MetaCodable = Package.Dependency.package(
-        url: "https://github.com/MxIris-Library-Forks/MetaCodable",
-        from: "1.4.1-fork"
+        url: "https://github.com/SwiftyLab/MetaCodable",
+        from: "1.5.0"
     )
     static let Apollo = Package.Dependency.package(
         url: "https://github.com/apollographql/apollo-ios.git",

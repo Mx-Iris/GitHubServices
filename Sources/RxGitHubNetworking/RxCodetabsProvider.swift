@@ -12,7 +12,7 @@ struct RxCodetabsProvider: RxProvider {
     }
 
     static func stubbingProvider() -> Self {
-        RxCodetabsProvider(provider: RxOnlineProvider(endpointClosure: endpointsClosure(), requestClosure: RxCodetabsProvider.endpointResolver(), stubClosure: MoyaProvider.immediatelyStub, online: .just(true)))
+        RxCodetabsProvider(provider: RxOnlineProvider(endpointClosure: endpointsClosure(), requestClosure: RxCodetabsProvider.endpointResolver(), stubClosure: MoyaProvider.immediatelyStub))
     }
 
     func request(_ token: T) -> Observable<Moya.Response> {

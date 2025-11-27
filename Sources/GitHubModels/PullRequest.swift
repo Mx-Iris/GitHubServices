@@ -68,7 +68,8 @@ public struct PullRequest: Codable {
     public var reviewComments: Int?
     @CodedAt("review_comments_url")
     public var reviewCommentsURL: URL?
-    public var state: State = .open
+//    @Default(ifMissing: State.open, forErrors: State.open)
+//    public var state: State
     @CodedAt("statuses_url")
     public var statusesURL: URL?
     public var title: String?

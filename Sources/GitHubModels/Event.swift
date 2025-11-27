@@ -25,6 +25,7 @@ public enum EventType: String, Codable, Hashable {
     case `public` = "PublicEvent"
     case pullRequest = "PullRequestEvent"
     case pullRequestReviewComment = "PullRequestReviewCommentEvent"
+    case pullRequestReview = "PullRequestReviewEvent"
     case push = "PushEvent"
     case release = "ReleaseEvent"
     case star = "WatchEvent"
@@ -225,16 +226,12 @@ public struct PullRequestReviewCommentPayload: Payload {
     }
 }
 
+@Codable
 public struct PushPayload: Payload {
     public var ref: String?
     public var size: Int?
+    @Default(ifMissing: [])
     public var commits: [Commit] = []
-
-    public enum CodingKeys: String, CodingKey {
-        case ref
-        case size
-        case commits
-    }
 }
 
 public struct ReleasePayload: Payload {

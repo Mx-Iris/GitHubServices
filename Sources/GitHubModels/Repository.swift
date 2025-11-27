@@ -2,10 +2,9 @@ import Foundation
 import MetaCodable
 import HelperCoders
 
-public class __Repository: Codable {}
-
 @Codable
-public final class Repository: __Repository {
+@Inherits(decodable: false, encodable: false)
+public final class Repository {
     @CodedAt("archived")
     @Default(false)
     public let isArchived: Bool

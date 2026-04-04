@@ -363,34 +363,34 @@ extension RxGitHubClient {
 }
 
 extension RxGitHubClient {
-    private func request(_ target: GithubTarget) -> Single<Any> {
+    private func request(_ target: GitHubTarget) -> Single<Any> {
         githubProvider.request(target)
             .mapJSON()
             .observe(on: MainScheduler.instance)
             .asSingle()
     }
 
-    private func requestWithoutMapping(_ target: GithubTarget) -> Single<Moya.Response> {
+    private func requestWithoutMapping(_ target: GitHubTarget) -> Single<Moya.Response> {
         githubProvider.request(target)
             .observe(on: MainScheduler.instance)
             .asSingle()
     }
 
-    private func requestObject<T: Decodable>(_ target: GithubTarget, type: T.Type) -> Single<T> {
+    private func requestObject<T: Decodable>(_ target: GitHubTarget, type: T.Type) -> Single<T> {
         githubProvider.request(target)
             .decodeObject(T.self)
             .observe(on: MainScheduler.instance)
             .asSingle()
     }
 
-    private func requestArray<T: Decodable>(_ target: GithubTarget, type: T.Type) -> Single<[T]> {
+    private func requestArray<T: Decodable>(_ target: GitHubTarget, type: T.Type) -> Single<[T]> {
         githubProvider.request(target)
             .decodeArray(T.self)
             .observe(on: MainScheduler.instance)
             .asSingle()
     }
 
-    private func requestWithoutObject(_ target: GithubTarget) -> Single<Void> {
+    private func requestWithoutObject(_ target: GitHubTarget) -> Single<Void> {
         requestWithoutMapping(target).map { _ in }
     }
 
@@ -436,14 +436,14 @@ extension RxGitHubClient {
 }
 
 extension RxGitHubClient {
-    private func trendingRequestObject<T: Decodable>(_ target: TrendingGithubTarget, type: T.Type) -> Single<T> {
+    private func trendingRequestObject<T: Decodable>(_ target: TrendingGitHubTarget, type: T.Type) -> Single<T> {
         trendingGithubProvider.request(target)
             .decodeObject(T.self)
             .observe(on: MainScheduler.instance)
             .asSingle()
     }
 
-    private func trendingRequestArray<T: Decodable>(_ target: TrendingGithubTarget, type: T.Type) -> Single<[T]> {
+    private func trendingRequestArray<T: Decodable>(_ target: TrendingGitHubTarget, type: T.Type) -> Single<[T]> {
         trendingGithubProvider.request(target)
             .decodeArray(T.self)
             .observe(on: MainScheduler.instance)

@@ -483,7 +483,7 @@ extension GitHubClient {
 @AddAsyncAllMembers
 extension GitHubClient {
     @discardableResult
-    private func request(_ target: GithubTarget, completion: @escaping (Result<Any, Error>) -> Void) -> Cancellable {
+    private func request(_ target: GitHubTarget, completion: @escaping (Result<Any, Error>) -> Void) -> Cancellable {
         githubProvider.request(target, callbackQueue: .main) { result in
             do {
                 switch result {
@@ -500,14 +500,14 @@ extension GitHubClient {
     }
 
     @discardableResult
-    private func requestWithoutMapping(_ target: GithubTarget, completion: @escaping (Result<Moya.Response, Error>) -> Void) -> Cancellable {
+    private func requestWithoutMapping(_ target: GitHubTarget, completion: @escaping (Result<Moya.Response, Error>) -> Void) -> Cancellable {
         githubProvider.request(target, callbackQueue: .main) { result in
             completion(result)
         }
     }
 
     @discardableResult
-    private func requestObject<T: Decodable>(_ target: GithubTarget, type: T.Type, completion: @escaping (Result<T, Error>) -> Void) -> Cancellable {
+    private func requestObject<T: Decodable>(_ target: GitHubTarget, type: T.Type, completion: @escaping (Result<T, Error>) -> Void) -> Cancellable {
         githubProvider.request(target, callbackQueue: .main) { result in
             do {
                 switch result {
@@ -524,7 +524,7 @@ extension GitHubClient {
     }
 
     @discardableResult
-    private func requestArray<T: Decodable>(_ target: GithubTarget, type: T.Type, completion: @escaping (Result<[T], Error>) -> Void) -> Cancellable {
+    private func requestArray<T: Decodable>(_ target: GitHubTarget, type: T.Type, completion: @escaping (Result<[T], Error>) -> Void) -> Cancellable {
         githubProvider.request(target, callbackQueue: .main) { result in
             do {
                 switch result {
@@ -541,7 +541,7 @@ extension GitHubClient {
     }
 
     @discardableResult
-    private func requestWithoutObject(_ target: GithubTarget, completion: @escaping (Result<Void, Error>) -> Void) -> Cancellable {
+    private func requestWithoutObject(_ target: GitHubTarget, completion: @escaping (Result<Void, Error>) -> Void) -> Cancellable {
         githubProvider.request(target, callbackQueue: .main) { result in
             do {
                 switch result {
@@ -586,7 +586,7 @@ extension GitHubClient {
 @AddAsyncAllMembers
 extension GitHubClient {
     @discardableResult
-    private func trendingRequestObject<T: Decodable>(_ target: TrendingGithubTarget, type: T.Type, completion: @escaping (Result<T, Error>) -> Void) -> Cancellable {
+    private func trendingRequestObject<T: Decodable>(_ target: TrendingGitHubTarget, type: T.Type, completion: @escaping (Result<T, Error>) -> Void) -> Cancellable {
         trendingGithubProvider.request(target, callbackQueue: .main) { result in
             do {
                 switch result {
@@ -603,7 +603,7 @@ extension GitHubClient {
     }
 
     @discardableResult
-    private func trendingRequestArray<T: Decodable>(_ target: TrendingGithubTarget, type: T.Type, completion: @escaping (Result<[T], Error>) -> Void) -> Cancellable {
+    private func trendingRequestArray<T: Decodable>(_ target: TrendingGitHubTarget, type: T.Type, completion: @escaping (Result<[T], Error>) -> Void) -> Cancellable {
         trendingGithubProvider.request(target, callbackQueue: .main) { result in
             do {
                 switch result {

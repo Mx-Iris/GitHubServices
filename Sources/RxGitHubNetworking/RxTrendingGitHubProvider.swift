@@ -4,7 +4,7 @@ import Foundation
 import GitHubNetworking
 
 struct RxTrendingGitHubProvider: RxProvider {
-    typealias T = TrendingGithubTarget
+    typealias T = TrendingGitHubTarget
     let provider: RxOnlineProvider<T>
 
     static func defaultProvider() -> Self {

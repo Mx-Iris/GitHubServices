@@ -3,7 +3,7 @@ import Moya
 import GitHubModels
 
 struct GitHubProvider: Provider {
-    typealias T = GithubTarget
+    typealias T = GitHubTarget
     let provider: OnlineProvider<T>
 
     static func defaultProvider() -> Self {

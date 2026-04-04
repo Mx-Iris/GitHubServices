@@ -1,13 +1,13 @@
 import Moya
 import Foundation
 
-package enum TrendingGithubTarget {
+package enum TrendingGitHubTarget {
     case trendingRepositories(language: String, since: String)
     case trendingDevelopers(language: String, since: String)
     case languages
 }
 
-extension TrendingGithubTarget: TargetType {
+extension TrendingGitHubTarget: TargetType {
     package var baseURL: URL {
         Configs.Network.trendingGithubBaseURL
     }

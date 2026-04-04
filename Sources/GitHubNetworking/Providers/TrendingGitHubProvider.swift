@@ -2,7 +2,7 @@ import Moya
 import Foundation
 
 struct TrendingGitHubProvider: Provider {
-    typealias T = TrendingGithubTarget
+    typealias T = TrendingGitHubTarget
     let provider: OnlineProvider<T>
 
     static func defaultProvider() -> Self {

@@ -5,7 +5,7 @@ import GitHubNetworking
 import GitHubModels
 
 struct RxGitHubProvider: RxProvider {
-    typealias T = GithubTarget
+    typealias T = GitHubTarget
     let provider: RxOnlineProvider<T>
 
     static func defaultProvider() -> Self {

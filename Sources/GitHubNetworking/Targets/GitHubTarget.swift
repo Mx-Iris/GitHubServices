@@ -3,7 +3,7 @@ import Foundation
 import ArrayBuilderModule
 import GitHubModels
 
-package enum GithubTarget {
+package enum GitHubTarget {
     // MARK: - Authentication is optional
 
     case repository(fullname: String)
@@ -83,7 +83,7 @@ package enum GithubTarget {
     case setOrganizationDefaultWorkflowPermissions(organization: String, defaultWorkflowPermissions: DefaultWorkflowPermissions, isCanApprovePullRequestReviews: Bool?)
 }
 
-extension GithubTarget: TargetType {
+extension GitHubTarget: TargetType {
     package var baseURL: URL {
         Configs.Network.githubRestBaseURL
     }

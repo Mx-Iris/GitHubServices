@@ -56,7 +56,7 @@ class NetworkMonitor {
             guard let self = self else { return }
             // 在主线程调用状态变化处理程序
             DispatchQueue.main.async {
-                self.statusChangeHandler?(path.status != .satisfied)
+                self.statusChangeHandler?(path.status == .satisfied)
             }
         }
 

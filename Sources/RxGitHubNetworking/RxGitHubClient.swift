@@ -18,7 +18,6 @@ public final class RxGitHubClient: RxGitHubAPI {
     private let githubProvider: RxGitHubProvider
     private let trendingGithubProvider: RxTrendingGitHubProvider
     private let codetabsProvider: RxCodetabsProvider
-    private let disposeBag = DisposeBag()
     private let token: Token?
     private let privateToken: Token?
 
@@ -397,36 +396,41 @@ extension RxGitHubClient {
 
     private func requestAllObject<Result>(api: @escaping (_ currentPage: Int) -> Single<[Result]>) -> Single<[Result]> {
         return Single.create { [weak self] observer in
-            guard let self else {
+            guard self != nil else {
                 observer(.failure(GitHubClientError.clientDidDealloc))
                 return Disposables.create()
             }
-            var allRepositories = [Result]()
+
+            var allObjects = [Result]()
             var currentPage = 1
+            let serialDisposable = SerialDisposable()
+            var isCancelled = false
 
             func fetchNextPage() {
-                api(currentPage).asObservable()
+                guard !isCancelled else { return }
+                let disposable = api(currentPage)
                     .subscribe(
-                        onNext: { repositories in
-                            if repositories.isEmpty {
-                                // 如果返回的仓库列表为空，则认为已经到达最后一页
-                                observer(.success(allRepositories))
+                        onSuccess: { objects in
+                            if objects.isEmpty {
+                                observer(.success(allObjects))
                             } else {
-                                // 如果返回的仓库列表不为空，则将获取到的仓库添加到所有仓库的数组中
-                                allRepositories.append(contentsOf: repositories)
+                                allObjects.append(contentsOf: objects)
                                 currentPage += 1
-                                fetchNextPage() // 递归调用以获取下一页
+                                fetchNextPage()
                             }
                         },
-                        onError: { error in
+                        onFailure: { error in
                             observer(.failure(error))
                         }
                     )
-                    .disposed(by: disposeBag)
+                serialDisposable.disposable = disposable
             }
 
-            fetchNextPage() // 开始从第一页获取数据
-            return Disposables.create()
+            fetchNextPage()
+            return Disposables.create {
+                isCancelled = true
+                serialDisposable.dispose()
+            }
         }
     }
 }

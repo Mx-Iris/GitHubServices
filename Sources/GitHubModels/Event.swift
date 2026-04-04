@@ -72,7 +72,22 @@ public struct Event: Codable {
         case payload
     }
 
-    public func encode(to encoder: Encoder) throws {}
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(actor, forKey: .actor)
+        if let createdAt {
+            try container.encode(Self.iso8601DateFormatter.string(from: createdAt), forKey: .createdAt)
+        }
+        try container.encodeIfPresent(id, forKey: .id)
+        try container.encodeIfPresent(organization, forKey: .organization)
+        try container.encodeIfPresent(isPublic, forKey: .isPublic)
+        try container.encodeIfPresent(repository, forKey: .repository)
+        try container.encode(type, forKey: .type)
+        if let payload {
+            let payloadEncoder = container.superEncoder(forKey: .payload)
+            try payload.encode(to: payloadEncoder)
+        }
+    }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)

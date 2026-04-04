@@ -206,8 +206,9 @@ extension RxGitHubClient {
     }
 
     public func allUserStarredRepositories(username: String, sort: APIParameter.Sort?, direction: APIParameter.Direction?) -> Single<[Repository]> {
-        requestAllObject { [unowned self] currentPage in
-            userStarredRepositories(username: username, sort: sort, direction: direction, numberOfPerPage: 100, page: currentPage)
+        requestAllObject { [weak self] currentPage in
+            guard let self else { return .error(GitHubClientError.clientDidDealloc) }
+            return userStarredRepositories(username: username, sort: sort, direction: direction, numberOfPerPage: 100, page: currentPage)
         }
     }
 
@@ -312,8 +313,9 @@ extension RxGitHubClient {
     }
 
     public func allAuthenticatedUserRepositories(filter: APIParameter.Filter?) -> Single<[Repository]> {
-        requestAllObject { [unowned self] currentPage in
-            authenticatedUserRepositories(filter: filter, sort: nil, direction: nil, numberOfPerPage: 100, page: currentPage, since: nil, before: nil)
+        requestAllObject { [weak self] currentPage in
+            guard let self else { return .error(GitHubClientError.clientDidDealloc) }
+            return authenticatedUserRepositories(filter: filter, sort: nil, direction: nil, numberOfPerPage: 100, page: currentPage, since: nil, before: nil)
         }
     }
 
@@ -322,8 +324,9 @@ extension RxGitHubClient {
     }
 
     public func allOrganizationRepositories(organization: String, type: APIParameter.RepositoriesType?) -> Single<[Repository]> {
-        requestAllObject { [unowned self] currentPage in
-            organizationRepositories(organization: organization, type: type, sort: nil, direction: nil, numberOfPerPage: 100, page: currentPage)
+        requestAllObject { [weak self] currentPage in
+            guard let self else { return .error(GitHubClientError.clientDidDealloc) }
+            return organizationRepositories(organization: organization, type: type, sort: nil, direction: nil, numberOfPerPage: 100, page: currentPage)
         }
     }
 
@@ -393,7 +396,11 @@ extension RxGitHubClient {
     }
 
     private func requestAllObject<Result>(api: @escaping (_ currentPage: Int) -> Single<[Result]>) -> Single<[Result]> {
-        return Single.create { [unowned self] observer in
+        return Single.create { [weak self] observer in
+            guard let self else {
+                observer(.failure(GitHubClientError.clientDidDealloc))
+                return Disposables.create()
+            }
             var allRepositories = [Result]()
             var currentPage = 1
 

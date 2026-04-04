@@ -47,19 +47,6 @@ extension TrendingGithubTarget: TargetType {
         URLEncoding.default
     }
 
-//    var sampleData: Data {
-//        var dataUrl: URL?
-//        switch self {
-//        case .trendingRepositories: dataUrl = R.file.repositoryTrendingsJson()
-//        case .trendingDevelopers: dataUrl = R.file.userTrendingsJson()
-//        case .languages: dataUrl = R.file.languagesJson()
-//        }
-//        if let url = dataUrl, let data = try? Data(contentsOf: url) {
-//            return data
-//        }
-//        return Data()
-//    }
-
     package var task: Task {
         if let parameters {
             return .requestParameters(parameters: parameters, encoding: parameterEncoding)

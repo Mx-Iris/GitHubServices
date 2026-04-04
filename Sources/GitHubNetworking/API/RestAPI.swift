@@ -63,7 +63,6 @@ public protocol RestAPI {
     func userStarredRepositories(username: String, sort: APIParameter.Sort?, direction: APIParameter.Direction?, numberOfPerPage: Int?, page: Int, completion: @escaping (Result<[Repository], Error>) -> Void)
 
     func allUserStarredRepositories(username: String, sort: APIParameter.Sort?, direction: APIParameter.Direction?, completion: @escaping (Result<[Repository], Error>) -> Void)
-//    func allUserStarredRepositories(username: String, sort: APIParameter.Sort?, direction: APIParameter.Direction?) async throws -> [Repository]
 
     func userWatchingRepositories(username: String, page: Int, completion: @escaping (Result<[Repository], Error>) -> Void)
 

@@ -40,17 +40,6 @@ extension CodetabsTarget: TargetType {
         URLEncoding.default
     }
 
-//    var sampleData: Data {
-//        var dataUrl: URL?
-//        switch self {
-//        case .numberOfLines: dataUrl = R.file.repositoryNumberOfLinesJson()
-//        }
-//        if let url = dataUrl, let data = try? Data(contentsOf: url) {
-//            return data
-//        }
-//        return Data()
-//    }
-
     package var task: Task {
         if let parameters {
             return .requestParameters(parameters: parameters, encoding: parameterEncoding)

@@ -74,19 +74,6 @@ extension PasswordStorage {
             )
     }
 
-//    func find(account: Account) -> String? {
-//        guard let host = account.location.host
-//        else { return nil }
-//
-//        return find(
-//            host: host,
-//            path: account.location.path,
-//            protocol: nil,
-//            port: UInt16(account.location.port ?? 80),
-//            account: account.user
-//        )
-//    }
-
     func save(url: URL, account: String, password: String) throws {
         guard let host = url.host
         else { throw PasswordError.invalidURL }
@@ -263,35 +250,6 @@ final class KeychainStorage: PasswordStorage {
         }
     }
 }
-
-//
-//// For testing
-// class Keychain {
-//    let keychainRef: SecKeychain
-//
-//    init?(path: String, password: String) {
-//        var keychain: SecKeychain?
-//        let status = SecKeychainCreate(
-//            path,
-//            UInt32(password.utf8.count),
-//            password,
-//            false,
-//            nil,
-//            &keychain
-//        )
-//        guard status == noErr,
-//              let finalKeychain = keychain
-//        else { return nil }
-//
-//        self.keychainRef = finalKeychain
-//    }
-// }
-//
-// class TemporaryKeychain: Keychain {
-//    deinit {
-//        SecKeychainDelete(keychainRef)
-//    }
-// }
 
 extension NSError {
     convenience init(osStatus: OSStatus) {

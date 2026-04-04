@@ -18,8 +18,6 @@ public enum TokenType: Codable, Hashable {
 }
 
 public struct Token: Codable {
-//    public var isValid = false
-
     /// Basic
     public var basicToken: String?
 
@@ -44,7 +42,6 @@ public struct Token: Codable {
     }
     
     enum CodingKeys: String, CodingKey {
-//        case isValid = "valid"
         case basicToken = "basic_token"
         case personalToken = "personal_token"
         case accessToken = "access_token"

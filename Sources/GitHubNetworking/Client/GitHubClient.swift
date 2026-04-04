@@ -409,7 +409,7 @@ extension GitHubClient {
     }
 
     public func markAsReadRepositoryNotifications(fullname: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        requestWithoutObject(.checkStarring(fullname: fullname), completion: completion)
+        requestWithoutObject(.markAsReadRepositoryNotifications(fullname: fullname), completion: completion)
     }
 
     public func checkStarring(fullname: String, completion: @escaping (Result<Void, Error>) -> Void) {

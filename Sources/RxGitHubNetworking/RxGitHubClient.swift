@@ -1,461 +1,357 @@
-import Moya
-import RxMoya
-import Apollo
 import RxSwift
 import RxCocoa
-import ApolloAPI
 import Foundation
 import GitHubModels
-import RxApolloClient
-import GitHubGraphQLAPI
 import GitHubNetworking
 
 public typealias Event = GitHubModels.Event
 
 public typealias Notification = GitHubModels.Notification
 
+/// A thin RxSwift wrapper around the completion-handler based `GitHubClient`.
+///
+/// Every method simply bridges the underlying `GitHubClient` callback into a
+/// `Single`/`Maybe`; no networking, decoding, or pagination logic is duplicated here.
 public final class RxGitHubClient: RxGitHubAPI {
-    private let githubProvider: RxGitHubProvider
-    private let trendingGithubProvider: RxTrendingGitHubProvider
-    private let codetabsProvider: RxCodetabsProvider
-    private let token: Token?
-    private let privateToken: Token?
+    private let client: GitHubClient
 
-    private lazy var client: ApolloClient = makeApolloClient(for: token)
-    private lazy var privateClient: ApolloClient = makeApolloClient(for: privateToken)
-
-    private func makeApolloClient(for token: Token?) -> ApolloClient {
-        let client = URLSessionClient()
-        let cache = InMemoryNormalizedCache()
-        let store = ApolloStore(cache: cache)
-        let provider = NetworkInterceptorProvider(client: client, store: store, token: token)
-        let transport = RequestChainNetworkTransport(
-            interceptorProvider: provider,
-            endpointURL: Configs.Network.githubGraphQLBaseURL
-        )
-        return ApolloClient(networkTransport: transport, store: store)
+    public init(token: Token?, privateToken: Token? = nil) {
+        self.client = GitHubClient(token: token, privateToken: privateToken)
     }
 
-    public init(token: Token?, privateToken: Token?) {
-        self.token = token
-        self.privateToken = privateToken
-        if let token {
-            self.githubProvider = .defaultProvider(token: token)
-        } else {
-            self.githubProvider = .defaultProvider()
-        }
-        self.trendingGithubProvider = .defaultProvider()
-        self.codetabsProvider = .defaultProvider()
-    }
-
-    private init() {
-        self.token = nil
-        self.privateToken = nil
-        self.githubProvider = .stubbingProvider()
-        self.trendingGithubProvider = .stubbingProvider()
-        self.codetabsProvider = .stubbingProvider()
+    private init(client: GitHubClient) {
+        self.client = client
     }
 
     public var isAuthorized: Bool {
-        if let token {
-            return token.type != .unauthorized
-        } else {
-            return false
-        }
+        client.isAuthorized
     }
 
-    public static let testAPI = RxGitHubClient()
+    public static let testAPI = RxGitHubClient(client: .testAPI)
 }
 
+// MARK: - Authentication
+
 extension RxGitHubClient {
-    
     public static func accessToken(clientID: String, clientSecret: String, code: String, redirectURI: String?, state: String?) -> Single<Token> {
-        Single.create { single in
+        Single.create { observer in
             GitHubClient.accessToken(clientID: clientID, clientSecret: clientSecret, code: code, redirectURI: redirectURI, state: state) { result in
                 switch result {
                 case let .success(token):
-                    single(.success(token))
+                    observer(.success(token))
                 case let .failure(error):
-                    single(.failure(error))
+                    observer(.failure(error))
                 }
             }
-            return Disposables.create {}
+            return Disposables.create()
         }
         .observe(on: MainScheduler.instance)
     }
-    
-    
+
     @available(*, deprecated, renamed: "accessToken(clientID:clientSecret:code:redirectURI:state:)")
     public static func createAccessToken(clientId: String, clientSecret: String, code: String, redirectUri: String?, state: String?) -> Single<Token> {
-        return accessToken(clientID: clientId, clientSecret: clientSecret, code: code, redirectURI: redirectUri, state: state)
+        accessToken(clientID: clientId, clientSecret: clientSecret, code: code, redirectURI: redirectUri, state: state)
     }
 }
+
+// MARK: - GraphQL
 
 extension RxGitHubClient {
     public func userLists(login: String, first: Int?, after: String?, skipSuggestions: Bool?) -> Maybe<[UserList]> {
-        privateClient.rx.fetch(query: UserListsQuery(login: login, first: (first ?? 100).graphQLNullable, after: after.graphQLNullable, skipSuggestions: skipSuggestions ?? true)).map {
-            $0.user?.lists.nodes.map { $0.compactMap { $0 }.map { UserList(fragment: $0.fragments.userListFragment) } } ?? []
-        }
+        single { self.client.userLists(login: login, first: first, after: after, skipSuggestions: skipSuggestions, completion: $0) }
+            .map { $0 ?? [] }
+            .asMaybe()
     }
 
     public func list(username: String, slug: String, first: Int?, after: String?, avatarSize: Int) -> Maybe<List> {
-        privateClient.rx.fetch(query: ListQuery(username: username, slug: slug, first: first.graphQLNullable, after: after.graphQLNullable, avatarSize: avatarSize)).compactMap { $0.list.map { List(graphList: $0) } }
+        maybe { self.client.list(username: username, slug: slug, first: first, after: after, avatarSize: avatarSize, completion: $0) }
     }
 }
 
+// MARK: - REST
+
 extension RxGitHubClient {
     public func searchRepositories(query: String, sort: String, order: String, page: Int, endCursor: String?) -> Single<RepositorySearch> {
-        requestObject(.searchRepositories(query: query, sort: sort, order: order, page: page), type: RepositorySearch.self)
+        single { self.client.searchRepositories(query: query, sort: sort, order: order, page: page, endCursor: endCursor, completion: $0) }
     }
 
     public func watchers(fullname: String, page: Int) -> Single<[User]> {
-        requestArray(.watchers(fullname: fullname, page: page), type: User.self)
+        single { self.client.watchers(fullname: fullname, page: page, completion: $0) }
     }
 
     public func stargazers(fullname: String, page: Int) -> Single<[User]> {
-        requestArray(.stargazers(fullname: fullname, page: page), type: User.self)
+        single { self.client.stargazers(fullname: fullname, page: page, completion: $0) }
     }
 
     public func forks(fullname: String, page: Int) -> Single<[Repository]> {
-        requestArray(.forks(fullname: fullname, page: page), type: Repository.self)
+        single { self.client.forks(fullname: fullname, page: page, completion: $0) }
     }
 
     public func readme(fullname: String, ref: String?) -> Single<Content> {
-        requestObject(.readme(fullname: fullname, ref: ref), type: Content.self)
+        single { self.client.readme(fullname: fullname, ref: ref, completion: $0) }
     }
 
     public func content(fullname: String, path: String, ref: String?) -> Single<Content> {
-        requestObject(.content(fullname: fullname, path: path, ref: ref), type: Content.self)
+        single { self.client.content(fullname: fullname, path: path, ref: ref, completion: $0) }
     }
 
     public func issues(fullname: String, state: String, page: Int) -> Single<[Issue]> {
-        requestArray(.issues(fullname: fullname, state: state, page: page), type: Issue.self)
+        single { self.client.issues(fullname: fullname, state: state, page: page, completion: $0) }
     }
 
     public func issue(fullname: String, number: Int) -> Single<Issue> {
-        requestObject(.issue(fullname: fullname, number: number), type: Issue.self)
+        single { self.client.issue(fullname: fullname, number: number, completion: $0) }
     }
 
     public func issueComments(fullname: String, number: Int, page: Int) -> Single<[Comment]> {
-        requestArray(.issueComments(fullname: fullname, number: number, page: page), type: Comment.self)
+        single { self.client.issueComments(fullname: fullname, number: number, page: page, completion: $0) }
     }
 
     public func commits(fullname: String, page: Int) -> Single<[Commit]> {
-        requestArray(.commits(fullname: fullname, page: page), type: Commit.self)
+        single { self.client.commits(fullname: fullname, page: page, completion: $0) }
     }
 
     public func commit(fullname: String, sha: String) -> Single<Commit> {
-        requestObject(.commit(fullname: fullname, sha: sha), type: Commit.self)
+        single { self.client.commit(fullname: fullname, sha: sha, completion: $0) }
     }
 
     public func branches(fullname: String, page: Int) -> Single<[Branch]> {
-        requestArray(.branches(fullname: fullname, page: page), type: Branch.self)
+        single { self.client.branches(fullname: fullname, page: page, completion: $0) }
     }
 
     public func branch(fullname: String, name: String) -> Single<Branch> {
-        requestObject(.branch(fullname: fullname, name: name), type: Branch.self)
+        single { self.client.branch(fullname: fullname, name: name, completion: $0) }
     }
 
     public func releases(fullname: String, page: Int) -> Single<[Release]> {
-        requestArray(.releases(fullname: fullname, page: page), type: Release.self)
+        single { self.client.releases(fullname: fullname, page: page, completion: $0) }
     }
 
     public func release(fullname: String, releaseId: Int) -> Single<Release> {
-        requestObject(.release(fullname: fullname, releaseId: releaseId), type: Release.self)
+        single { self.client.release(fullname: fullname, releaseId: releaseId, completion: $0) }
     }
 
     public func pullRequests(fullname: String, state: String, page: Int) -> Single<[PullRequest]> {
-        requestArray(.pullRequests(fullname: fullname, state: state, page: page), type: PullRequest.self)
+        single { self.client.pullRequests(fullname: fullname, state: state, page: page, completion: $0) }
     }
 
     public func pullRequest(fullname: String, number: Int) -> Single<PullRequest> {
-        requestObject(.pullRequest(fullname: fullname, number: number), type: PullRequest.self)
+        single { self.client.pullRequest(fullname: fullname, number: number, completion: $0) }
     }
 
     public func pullRequestComments(fullname: String, number: Int, page: Int) -> Single<[Comment]> {
-        requestArray(.pullRequestComments(fullname: fullname, number: number, page: page), type: Comment.self)
+        single { self.client.pullRequestComments(fullname: fullname, number: number, page: page, completion: $0) }
     }
 
     public func contributors(fullname: String, page: Int) -> Single<[User]> {
-        requestArray(.contributors(fullname: fullname, page: page), type: User.self)
+        single { self.client.contributors(fullname: fullname, page: page, completion: $0) }
     }
 
     public func repository(fullname: String, qualifiedName: String) -> Single<Repository> {
-        requestObject(.repository(fullname: fullname), type: Repository.self)
+        single { self.client.repository(fullname: fullname, qualifiedName: qualifiedName, completion: $0) }
     }
 
     public func searchUsers(query: String, sort: String, order: String, page: Int, endCursor: String?) -> Single<UserSearch> {
-        requestObject(.searchUsers(query: query, sort: sort, order: order, page: page), type: UserSearch.self)
+        single { self.client.searchUsers(query: query, sort: sort, order: order, page: page, endCursor: endCursor, completion: $0) }
     }
 
     public func user(owner: String) -> Single<User> {
-        requestObject(.user(owner: owner), type: User.self)
+        single { self.client.user(owner: owner, completion: $0) }
     }
 
     public func organization(owner: String) -> Single<User> {
-        requestObject(.organization(owner: owner), type: User.self)
+        single { self.client.organization(owner: owner, completion: $0) }
     }
 
     public func userRepositories(username: String, type: APIParameter.RepositoriesType?, sort: APIParameter.Sort?, page: Int, numberOfPerPage: Int?) -> Single<[Repository]> {
-        requestArray(.userRepositories(username: username, type: type, sort: sort, page: page, numberOfPerPage: numberOfPerPage), type: Repository.self)
+        single { self.client.userRepositories(username: username, type: type, sort: sort, page: page, numberOfPerPage: numberOfPerPage, completion: $0) }
     }
 
     public func userStarredRepositories(username: String, sort: APIParameter.Sort?, direction: APIParameter.Direction?, numberOfPerPage: Int?, page: Int) -> Single<[Repository]> {
-        requestArray(.userStarredRepositories(username: username, sort: sort, direction: direction, numberOfPerPage: numberOfPerPage, page: page), type: Repository.self)
+        single { self.client.userStarredRepositories(username: username, sort: sort, direction: direction, numberOfPerPage: numberOfPerPage, page: page, completion: $0) }
     }
 
     public func allUserStarredRepositories(username: String, sort: APIParameter.Sort?, direction: APIParameter.Direction?) -> Single<[Repository]> {
-        requestAllObject { [weak self] currentPage in
-            guard let self else { return .error(GitHubClientError.clientDidDealloc) }
-            return userStarredRepositories(username: username, sort: sort, direction: direction, numberOfPerPage: 100, page: currentPage)
-        }
+        single { self.client.allUserStarredRepositories(username: username, sort: sort, direction: direction, completion: $0) }
     }
 
     public func userWatchingRepositories(username: String, page: Int) -> Single<[Repository]> {
-        requestArray(.userWatchingRepositories(username: username, page: page), type: Repository.self)
+        single { self.client.userWatchingRepositories(username: username, page: page, completion: $0) }
     }
 
     public func userFollowers(username: String, page: Int) -> Single<[User]> {
-        requestArray(.userFollowers(username: username, page: page), type: User.self)
+        single { self.client.userFollowers(username: username, page: page, completion: $0) }
     }
 
     public func userFollowing(username: String, page: Int) -> Single<[User]> {
-        requestArray(.userFollowing(username: username, page: page), type: User.self)
+        single { self.client.userFollowing(username: username, page: page, completion: $0) }
     }
 
     public func events(page: Int) -> Single<[Event]> {
-        requestArray(.events(page: page), type: Event.self)
+        single { self.client.events(page: page, completion: $0) }
     }
 
     public func repositoryEvents(owner: String, repo: String, page: Int) -> Single<[Event]> {
-        requestArray(.repositoryEvents(owner: owner, repo: repo, page: page), type: Event.self)
+        single { self.client.repositoryEvents(owner: owner, repo: repo, page: page, completion: $0) }
     }
 
     public func userReceivedEvents(username: String, page: Int) -> Single<[Event]> {
-        requestArray(.userReceivedEvents(username: username, page: page), type: Event.self)
+        single { self.client.userReceivedEvents(username: username, page: page, completion: $0) }
     }
 
     public func userPerformedEvents(username: String, page: Int) -> Single<[Event]> {
-        requestArray(.userPerformedEvents(username: username, page: page), type: Event.self)
+        single { self.client.userPerformedEvents(username: username, page: page, completion: $0) }
     }
 
     public func organizationEvents(username: String, page: Int) -> Single<[Event]> {
-        requestArray(.organizationEvents(username: username, page: page), type: Event.self)
+        single { self.client.organizationEvents(username: username, page: page, completion: $0) }
     }
 
     // MARK: - Authentication is required
 
     public func profile() -> Single<User> {
-        Single.zip(authenticatedUser(), authenticatedUserOrganizations(numberOfPerPage: 100, page: 1, isDetail: true)) { user, organizations in
-            var user = user
-            user.organizations = organizations
-            return user
-        }
+        single { self.client.profile(completion: $0) }
     }
 
     public func authenticatedUser() -> Single<User> {
-        requestObject(.authenticatedUser, type: User.self)
+        single { self.client.authenticatedUser(completion: $0) }
     }
 
     public func authenticatedUserOrganizations(numberOfPerPage: Int?, page: Int?, isDetail: Bool) -> Single<[User]> {
-        var request: Single<[User]> = requestArray(.authenticatedUserOrganizations(numberOfPerPage: numberOfPerPage, page: page), type: User.self)
-        if isDetail {
-            request = request.flatMap {
-                Single.zip($0.map { self.organization(owner: $0.login) })
-            }
-        }
-        return request
+        single { self.client.authenticatedUserOrganizations(numberOfPerPage: numberOfPerPage, page: page, isDetail: isDetail, completion: $0) }
     }
 
     public func notifications(all: Bool, participating: Bool, page: Int) -> Single<[Notification]> {
-        requestArray(.notifications(all: all, participating: participating, page: page), type: Notification.self)
+        single { self.client.notifications(all: all, participating: participating, page: page, completion: $0) }
     }
 
     public func repositoryNotifications(fullname: String, all: Bool, participating: Bool, page: Int) -> Single<[Notification]> {
-        requestArray(.repositoryNotifications(fullname: fullname, all: all, participating: participating, page: page), type: Notification.self)
+        single { self.client.repositoryNotifications(fullname: fullname, all: all, participating: participating, page: page, completion: $0) }
     }
 
     public func markAsReadNotifications() -> Single<Void> {
-        requestWithoutMapping(.markAsReadNotifications).map { _ in }
+        single { self.client.markAsReadNotifications(completion: $0) }
     }
 
     public func markAsReadRepositoryNotifications(fullname: String) -> Single<Void> {
-        requestWithoutMapping(.markAsReadRepositoryNotifications(fullname: fullname)).map { _ in }
+        single { self.client.markAsReadRepositoryNotifications(fullname: fullname, completion: $0) }
     }
 
     public func checkStarring(fullname: String) -> Single<Void> {
-        requestWithoutMapping(.checkStarring(fullname: fullname)).map { _ in }
+        single { self.client.checkStarring(fullname: fullname, completion: $0) }
     }
 
     public func starRepository(fullname: String) -> Single<Void> {
-        requestWithoutMapping(.starRepository(fullname: fullname)).map { _ in }
+        single { self.client.starRepository(fullname: fullname, completion: $0) }
     }
 
     public func unstarRepository(fullname: String) -> Single<Void> {
-        requestWithoutMapping(.unstarRepository(fullname: fullname)).map { _ in }
+        single { self.client.unstarRepository(fullname: fullname, completion: $0) }
     }
 
     public func checkFollowing(username: String) -> Single<Void> {
-        requestWithoutMapping(.checkFollowing(username: username)).map { _ in }
+        single { self.client.checkFollowing(username: username, completion: $0) }
     }
 
     public func followUser(username: String) -> Single<Void> {
-        requestWithoutMapping(.followUser(username: username)).map { _ in }
+        single { self.client.followUser(username: username, completion: $0) }
     }
 
     public func unfollowUser(username: String) -> Single<Void> {
-        requestWithoutMapping(.unfollowUser(username: username)).map { _ in }
+        single { self.client.unfollowUser(username: username, completion: $0) }
     }
 
     public func authenticatedUserRepositories(filter: APIParameter.Filter?, sort: APIParameter.Sort?, direction: APIParameter.Direction?, numberOfPerPage: Int?, page: Int?, since: Date?, before: Date?) -> Single<[Repository]> {
-        requestArray(.authenticatedUserRepositories(filter: filter, sort: sort, direction: direction, numberOfPerPage: numberOfPerPage, page: page, since: since, before: before), type: Repository.self)
+        single { self.client.authenticatedUserRepositories(filter: filter, sort: sort, direction: direction, numberOfPerPage: numberOfPerPage, page: page, since: since, before: before, completion: $0) }
     }
 
     public func allAuthenticatedUserRepositories(filter: APIParameter.Filter?) -> Single<[Repository]> {
-        requestAllObject { [weak self] currentPage in
-            guard let self else { return .error(GitHubClientError.clientDidDealloc) }
-            return authenticatedUserRepositories(filter: filter, sort: nil, direction: nil, numberOfPerPage: 100, page: currentPage, since: nil, before: nil)
-        }
+        single { self.client.allAuthenticatedUserRepositories(filter: filter, completion: $0) }
     }
 
     public func organizationRepositories(organization: String, type: APIParameter.RepositoriesType?, sort: APIParameter.Sort?, direction: APIParameter.Direction?, numberOfPerPage: Int?, page: Int?) -> Single<[Repository]> {
-        requestArray(.organizationRepositories(organization: organization, type: type, sort: sort, direction: direction, numberOfPerPage: numberOfPerPage, page: page), type: Repository.self)
+        single { self.client.organizationRepositories(organization: organization, type: type, sort: sort, direction: direction, numberOfPerPage: numberOfPerPage, page: page, completion: $0) }
     }
 
     public func allOrganizationRepositories(organization: String, type: APIParameter.RepositoriesType?) -> Single<[Repository]> {
-        requestAllObject { [weak self] currentPage in
-            guard let self else { return .error(GitHubClientError.clientDidDealloc) }
-            return organizationRepositories(organization: organization, type: type, sort: nil, direction: nil, numberOfPerPage: 100, page: currentPage)
-        }
+        single { self.client.allOrganizationRepositories(organization: organization, type: type, completion: $0) }
     }
 
     public func createFork(fullname: String, organization: String?, name: String?, isDefaultBranchOnly: Bool) -> Single<Repository> {
-        requestObject(.createFork(fullname: fullname, organization: organization, name: name, isDefaultBranchOnly: isDefaultBranchOnly), type: Repository.self)
+        single { self.client.createFork(fullname: fullname, organization: organization, name: name, isDefaultBranchOnly: isDefaultBranchOnly, completion: $0) }
     }
 
     public func syncFork(fullname: String, branch: String) -> Single<SyncForkSuccessResponse> {
-        requestObject(.syncFork(fullname: fullname, branch: branch), type: SyncForkSuccessResponse.self)
+        single { self.client.syncFork(fullname: fullname, branch: branch, completion: $0) }
     }
 
     public func deleteRepository(fullname: String) -> Single<Void> {
-        requestWithoutObject(.deleteRepository(fullname: fullname))
+        single { self.client.deleteRepository(fullname: fullname, completion: $0) }
     }
 
     // MARK: - Trending
 
     public func trendingRepositories(language: String, since: String) -> Single<[TrendingRepository]> {
-        trendingRequestArray(.trendingRepositories(language: language, since: since), type: TrendingRepository.self)
+        single { self.client.trendingRepositories(language: language, since: since, completion: $0) }
     }
 
     public func trendingDevelopers(language: String, since: String) -> Single<[TrendingUser]> {
-        trendingRequestArray(.trendingDevelopers(language: language, since: since), type: TrendingUser.self)
+        single { self.client.trendingDevelopers(language: language, since: since, completion: $0) }
     }
 
     public func languages() -> Single<[Language]> {
-        trendingRequestArray(.languages, type: Language.self)
+        single { self.client.languages(completion: $0) }
     }
 
-    // MARK: Codetabs
+    // MARK: - Codetabs
 
     public func numberOfLines(fullname: String) -> Single<[LanguageLines]> {
-        codetabsRequestArray(.numberOfLines(fullname: fullname), type: LanguageLines.self)
+        single { self.client.numberOfLines(fullname: fullname, completion: $0) }
     }
 }
 
+// MARK: - Bridging helpers
+
 extension RxGitHubClient {
-    private func request(_ target: GitHubTarget) -> Single<Any> {
-        githubProvider.request(target)
-            .mapJSON()
-            .observe(on: MainScheduler.instance)
-            .asSingle()
-    }
-
-    private func requestWithoutMapping(_ target: GitHubTarget) -> Single<Moya.Response> {
-        githubProvider.request(target)
-            .observe(on: MainScheduler.instance)
-            .asSingle()
-    }
-
-    private func requestObject<T: Decodable>(_ target: GitHubTarget, type: T.Type) -> Single<T> {
-        githubProvider.request(target)
-            .decodeObject(T.self)
-            .observe(on: MainScheduler.instance)
-            .asSingle()
-    }
-
-    private func requestArray<T: Decodable>(_ target: GitHubTarget, type: T.Type) -> Single<[T]> {
-        githubProvider.request(target)
-            .decodeArray(T.self)
-            .observe(on: MainScheduler.instance)
-            .asSingle()
-    }
-
-    private func requestWithoutObject(_ target: GitHubTarget) -> Single<Void> {
-        requestWithoutMapping(target).map { _ in }
-    }
-
-    private func requestAllObject<Result>(api: @escaping (_ currentPage: Int) -> Single<[Result]>) -> Single<[Result]> {
-        return Single.create { [weak self] observer in
-            guard self != nil else {
-                observer(.failure(GitHubClientError.clientDidDealloc))
-                return Disposables.create()
+    /// Bridges a completion-handler call returning `Result<Value, Error>` into a `Single`.
+    /// The closure's own return value (a `Cancellable` or `Void`) is ignored.
+    private func single<Value, Ignored>(
+        _ work: @escaping (@escaping (Result<Value, Error>) -> Void) -> Ignored
+    ) -> Single<Value> {
+        Single.create { observer in
+            _ = work { result in
+                switch result {
+                case let .success(value):
+                    observer(.success(value))
+                case let .failure(error):
+                    observer(.failure(error))
+                }
             }
-
-            var allObjects = [Result]()
-            var currentPage = 1
-            let serialDisposable = SerialDisposable()
-            var isCancelled = false
-
-            func fetchNextPage() {
-                guard !isCancelled else { return }
-                let disposable = api(currentPage)
-                    .subscribe(
-                        onSuccess: { objects in
-                            if objects.isEmpty {
-                                observer(.success(allObjects))
-                            } else {
-                                allObjects.append(contentsOf: objects)
-                                currentPage += 1
-                                fetchNextPage()
-                            }
-                        },
-                        onFailure: { error in
-                            observer(.failure(error))
-                        }
-                    )
-                serialDisposable.disposable = disposable
-            }
-
-            fetchNextPage()
-            return Disposables.create {
-                isCancelled = true
-                serialDisposable.dispose()
-            }
+            return Disposables.create()
         }
-    }
-}
-
-extension RxGitHubClient {
-    private func trendingRequestObject<T: Decodable>(_ target: TrendingGitHubTarget, type: T.Type) -> Single<T> {
-        trendingGithubProvider.request(target)
-            .decodeObject(T.self)
-            .observe(on: MainScheduler.instance)
-            .asSingle()
+        .observe(on: MainScheduler.instance)
     }
 
-    private func trendingRequestArray<T: Decodable>(_ target: TrendingGitHubTarget, type: T.Type) -> Single<[T]> {
-        trendingGithubProvider.request(target)
-            .decodeArray(T.self)
-            .observe(on: MainScheduler.instance)
-            .asSingle()
-    }
-}
-
-extension RxGitHubClient {
-    private func codetabsRequestArray<T: Decodable>(_ target: CodetabsTarget, type: T.Type) -> Single<[T]> {
-        codetabsProvider.request(target)
-            .decodeArray(T.self)
-            .observe(on: MainScheduler.instance)
-            .asSingle()
+    /// Bridges a completion-handler call returning `Result<Value?, Error>` into a `Maybe`,
+    /// emitting `.completed` when the value is `nil`.
+    private func maybe<Value, Ignored>(
+        _ work: @escaping (@escaping (Result<Value?, Error>) -> Void) -> Ignored
+    ) -> Maybe<Value> {
+        Maybe.create { observer in
+            _ = work { result in
+                switch result {
+                case let .success(value):
+                    if let value {
+                        observer(.success(value))
+                    } else {
+                        observer(.completed)
+                    }
+                case let .failure(error):
+                    observer(.error(error))
+                }
+            }
+            return Disposables.create()
+        }
+        .observe(on: MainScheduler.instance)
     }
 }

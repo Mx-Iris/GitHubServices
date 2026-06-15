@@ -169,11 +169,8 @@ let package = Package(
     ],
     dependencies: [
         .RxSwift,
-        .RxOptional,
-        .RxApolloClient,
         .Moya,
         .Apollo,
-        .Alamofire,
         .MetaCodable,
         .GitHubGraphQLAPI,
         .ArrayBuilder,
@@ -218,12 +215,8 @@ let package = Package(
                 "GitHubModels",
                 "GitHubNetworking",
                 "GitHubServicesHelpers",
-                .Alamofire,
                 .RxSwift,
                 .RxCocoa,
-                .RxOptional,
-                .RxMoya,
-                .RxApolloClient,
             ]
         ),
 

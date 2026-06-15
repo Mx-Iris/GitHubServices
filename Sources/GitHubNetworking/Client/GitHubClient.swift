@@ -38,6 +38,24 @@ public final class GitHubClient: GitHubAPI {
         self.trendingGithubProvider = .defaultProvider()
         self.codetabsProvider = .defaultProvider()
     }
+
+    private init() {
+        self.token = nil
+        self.privateToken = nil
+        self.githubProvider = .stubbingProvider()
+        self.trendingGithubProvider = .stubbingProvider()
+        self.codetabsProvider = .stubbingProvider()
+    }
+
+    public var isAuthorized: Bool {
+        if let token {
+            return token.type != .unauthorized
+        } else {
+            return false
+        }
+    }
+
+    public static let testAPI = GitHubClient()
 }
 
 @AddAsyncAllMembers
@@ -465,6 +483,21 @@ extension GitHubClient {
                     return
                 }
                 completion(.success(data.user?.lists.nodes.map { $0.compactMap { $0 }.map { UserList(fragment: $0.fragments.userListFragment) } } ?? []))
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+
+    public func list(username: String, slug: String, first: Int?, after: String?, avatarSize: Int, completion: @escaping (Result<List?, Error>) -> Void) {
+        privateClient.fetch(query: ListQuery(username: username, slug: slug, first: first.graphQLNullable, after: after.graphQLNullable, avatarSize: avatarSize)) { result in
+            switch result {
+            case .success(let data):
+                guard let data = data.data else {
+                    completion(.success(nil))
+                    return
+                }
+                completion(.success(data.list.map { List(graphList: $0) }))
             case .failure(let error):
                 completion(.failure(error))
             }

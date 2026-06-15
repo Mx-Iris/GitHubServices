@@ -1,5 +1,5 @@
 {
-  "originHash" : "2e01cb22062bc77824460cf56d0111265d2578583f80b7d0faa5b74efa94c2b4",
+  "originHash" : "39b15bf3773f5877195697432f900c5e98de07d4f0405753fb352397fae7cb98",
   "pins" : [
     {
       "identity" : "alamofire",
@@ -62,24 +62,6 @@
       "state" : {
         "revision" : "c43bae3dac73fdd3cb906bd5a1914686ca71ed3c",
         "version" : "6.7.0"
-      }
-    },
-    {
-      "identity" : "rxapolloclient",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/MxIris-Library-Forks/RxApolloClient",
-      "state" : {
-        "branch" : "master",
-        "revision" : "4574c4de06a441f1705e3103c0c8607947134154"
-      }
-    },
-    {
-      "identity" : "rxoptional",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/RxSwiftCommunity/RxOptional",
-      "state" : {
-        "revision" : "8fc89dd1d45e0207b3df29c9dd02bdb39e431f3a",
-        "version" : "5.0.6"
       }
     },
     {

@@ -119,6 +119,249 @@ extension GitHubClient {
     }
 }
 
+// MARK: - OAuth Device Flow
+//
+// Reference: https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps#device-flow
+//
+// The Device Flow is the OAuth grant designed for clients that can't receive a redirect callback
+// (CLIs, IoT, menu-bar apps). It doesn't require `client_secret`, which makes it the recommended
+// choice for distributed desktop apps that would otherwise have to ship the secret in the binary.
+
+@AddAsyncAllMembers
+extension GitHubClient {
+    /// First leg of the Device Flow: ask GitHub for a `device_code` + `user_code` pair.
+    ///
+    /// `POST https://github.com/login/device/code`. No `client_secret` required.
+    public static func requestDeviceCode(
+        clientID: String,
+        scopes: [OAuthScope],
+        completion: @escaping (Result<DeviceCode, Error>) -> Void
+    ) {
+        guard let url = URL(string: "https://github.com/login/device/code") else {
+            completion(.failure(NSError(domain: "InvalidURL", code: -1, userInfo: nil)))
+            return
+        }
+
+        var parameters: [String: String] = ["client_id": clientID]
+        if !scopes.isEmpty {
+            parameters["scope"] = scopes.map(\.rawValue).joined(separator: " ")
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.httpBody = formEncoded(parameters)
+
+        let task = URLSession.shared.dataTask(with: request) { data, _, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            guard let data = data else {
+                completion(.failure(NSError(domain: "NoData", code: -2, userInfo: nil)))
+                return
+            }
+
+            do {
+                if let errorPayload = decodeDeviceFlowErrorPayload(from: data) {
+                    completion(.failure(DeviceFlowError(code: errorPayload.error, description: errorPayload.errorDescription)))
+                    return
+                }
+                let code = try JSONDecoder().decode(DeviceCode.self, from: data)
+                completion(.success(code))
+            } catch {
+                completion(.failure(error))
+            }
+        }
+        task.resume()
+    }
+
+    /// Second leg of the Device Flow: poll once for an access token using a previously-issued
+    /// `device_code`. Returns ``DeviceFlowError/authorizationPending`` until the user authorizes.
+    ///
+    /// `POST https://github.com/login/oauth/access_token` with
+    /// `grant_type=urn:ietf:params:oauth:grant-type:device_code`. No `client_secret` required.
+    public static func pollDeviceAccessToken(
+        clientID: String,
+        deviceCode: String,
+        completion: @escaping (Result<Token, Error>) -> Void
+    ) {
+        guard let url = URL(string: "https://github.com/login/oauth/access_token") else {
+            completion(.failure(NSError(domain: "InvalidURL", code: -1, userInfo: nil)))
+            return
+        }
+
+        let parameters: [String: String] = [
+            "client_id": clientID,
+            "device_code": deviceCode,
+            "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+        ]
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.httpBody = formEncoded(parameters)
+
+        let task = URLSession.shared.dataTask(with: request) { data, _, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            guard let data = data else {
+                completion(.failure(NSError(domain: "NoData", code: -2, userInfo: nil)))
+                return
+            }
+
+            if let errorPayload = decodeDeviceFlowErrorPayload(from: data) {
+                completion(.failure(DeviceFlowError(code: errorPayload.error, description: errorPayload.errorDescription)))
+                return
+            }
+
+            do {
+                let token = try JSONDecoder().decode(Token.self, from: data)
+                completion(.success(token))
+            } catch {
+                completion(.failure(error))
+            }
+        }
+        task.resume()
+    }
+
+    /// High-level Device Flow login: requests a device code, hands it to ``onUserCode`` for the
+    /// host UI to display, then polls with the server-supplied interval (respecting `slow_down`
+    /// back-off and the overall `expires_in` deadline) until either an access token arrives or the
+    /// flow terminates.
+    ///
+    /// The async variant generated by `@AddAsyncAllMembers` is cancellation-aware via `Task.sleep`.
+    public static func deviceFlowLogin(
+        clientID: String,
+        scopes: [OAuthScope],
+        onUserCode: @escaping @Sendable (DeviceCode) -> Void,
+        completion: @escaping @Sendable (Result<Token, Error>) -> Void
+    ) {
+        _Concurrency.Task {
+            do {
+                let deviceCode = try await requestDeviceCode(clientID: clientID, scopes: scopes)
+                onUserCode(deviceCode)
+
+                let deadline = Date().addingTimeInterval(deviceCode.expiresIn)
+                var interval = deviceCode.interval
+
+                while Date() < deadline {
+                    let nanoseconds = UInt64(max(interval, 1) * 1_000_000_000)
+                    try await _Concurrency.Task.sleep(nanoseconds: nanoseconds)
+
+                    do {
+                        let token = try await pollDeviceAccessToken(clientID: clientID, deviceCode: deviceCode.deviceCode)
+                        completion(.success(token))
+                        return
+                    } catch DeviceFlowError.authorizationPending {
+                        continue
+                    } catch DeviceFlowError.slowDown {
+                        interval += 5
+                        continue
+                    } catch {
+                        completion(.failure(error))
+                        return
+                    }
+                }
+                completion(.failure(DeviceFlowError.expiredToken))
+            } catch {
+                completion(.failure(error))
+            }
+        }
+    }
+}
+
+// MARK: - Token revocation
+
+@AddAsyncAllMembers
+extension GitHubClient {
+    /// Revokes a single user access token on the server side, releasing the slot it occupies in
+    /// the `(user, application, scope)` 10-token rolling cap. Use this from a `logout` flow so the
+    /// user can sign in on another device without prematurely evicting their other sessions.
+    ///
+    /// `DELETE /applications/{client_id}/token` — requires Basic auth using the OAuth App's
+    /// `client_id` and `client_secret`. Returns 204 on success.
+    public static func revokeAppToken(
+        clientID: String,
+        clientSecret: String,
+        accessToken: String,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        guard let url = URL(string: "https://api.github.com/applications/\(clientID)/token") else {
+            completion(.failure(NSError(domain: "InvalidURL", code: -1, userInfo: nil)))
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let credentials = "\(clientID):\(clientSecret)".data(using: .utf8)?.base64EncodedString() ?? ""
+        request.setValue("Basic \(credentials)", forHTTPHeaderField: "Authorization")
+
+        let body = ["access_token": accessToken]
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        } catch {
+            completion(.failure(error))
+            return
+        }
+
+        let task = URLSession.shared.dataTask(with: request) { _, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            guard let httpResponse = response as? HTTPURLResponse else {
+                completion(.failure(NSError(domain: "InvalidResponse", code: -3, userInfo: nil)))
+                return
+            }
+            // 204 No Content on success. 404 also acceptable — token was already revoked / unknown.
+            if (200..<300).contains(httpResponse.statusCode) || httpResponse.statusCode == 404 {
+                completion(.success(()))
+            } else {
+                completion(.failure(NSError(
+                    domain: "GitHubRevokeAppToken",
+                    code: httpResponse.statusCode,
+                    userInfo: [NSLocalizedDescriptionKey: "Failed to revoke token (HTTP \(httpResponse.statusCode))."]
+                )))
+            }
+        }
+        task.resume()
+    }
+}
+
+// MARK: - OAuth helpers
+
+private func formEncoded(_ parameters: [String: String]) -> Data? {
+    var components = URLComponents()
+    components.queryItems = parameters.map { URLQueryItem(name: $0.key, value: $0.value) }
+    return components.query?.data(using: .utf8)
+}
+
+private struct DeviceFlowErrorPayload: Decodable {
+    let error: String
+    let errorDescription: String?
+
+    enum CodingKeys: String, CodingKey {
+        case error
+        case errorDescription = "error_description"
+    }
+}
+
+private func decodeDeviceFlowErrorPayload(from data: Data) -> DeviceFlowErrorPayload? {
+    guard let payload = try? JSONDecoder().decode(DeviceFlowErrorPayload.self, from: data) else {
+        return nil
+    }
+    return payload.error.isEmpty ? nil : payload
+}
+
 @AddAsyncAllMembers
 extension GitHubClient {
     public func searchRepositories(query: String, sort: String, order: String, page: Int, endCursor: String?, completion: @escaping (Result<GitHubModels.RepositorySearch, Error>) -> Void) {

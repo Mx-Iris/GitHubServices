@@ -31,7 +31,11 @@ final class OnlineProvider<Target> where Target: Moya.TargetType {
                 switch result {
                 case let .success(response):
 //                    print(response.response?.allHeaderFields["Link"])
-                    let filteredResponse = try response.filterSuccessfulStatusCodes()
+                    let filteredResponse = if response.statusCode == 304 {
+                        response
+                    } else {
+                        try response.filterSuccessfulStatusCodes()
+                    }
                     completion(.success(filteredResponse))
                 case let .failure(error):
                     completion(.failure(error))

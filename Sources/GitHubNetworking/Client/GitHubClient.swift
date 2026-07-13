@@ -7,6 +7,12 @@ import GitHubGraphQLAPI
 import GitHubServicesHelpers
 
 public final class GitHubClient: GitHubAPI {
+    private static let responseDecodingQueue = DispatchQueue(
+        label: "com.JH.GitHubServices.ResponseDecoding",
+        qos: .userInitiated,
+        attributes: .concurrent
+    )
+
     private let githubProvider: GitHubProvider
     private let trendingGithubProvider: TrendingGitHubProvider
     private let codetabsProvider: CodetabsProvider
@@ -515,6 +521,20 @@ extension GitHubClient {
         )
     }
 
+    public func authenticatedUserStarredRepositories(sort: APIParameter.Sort?, direction: APIParameter.Direction?, numberOfPerPage: Int?, page: Int, entityTag: String?, completion: @escaping (Result<PaginatedResponse<GitHubModels.Repository>, Error>) -> Void) {
+        requestPaginatedArray(
+            .authenticatedUserStarredRepositories(
+                sort: sort,
+                direction: direction,
+                numberOfPerPage: numberOfPerPage,
+                page: page,
+                entityTag: entityTag
+            ),
+            type: Repository.self,
+            completion: completion
+        )
+    }
+
     public func userWatchingRepositories(username: String, page: Int, completion: @escaping (Result<[GitHubModels.Repository], Error>) -> Void) {
         requestArray(.userWatchingRepositories(username: username, page: page), type: Repository.self, completion: completion)
     }
@@ -807,6 +827,49 @@ extension GitHubClient {
                 case .success(let response):
                     let object = try response.map([T].self)
                     completion(.success(object))
+                case .failure(let failure):
+                    throw failure
+                }
+            } catch {
+                completion(.failure(error))
+            }
+        }
+    }
+
+    @discardableResult
+    private func requestPaginatedArray<DecodedElement: Decodable>(
+        _ target: GitHubTarget,
+        type: DecodedElement.Type,
+        completion: @escaping (Result<PaginatedResponse<DecodedElement>, Error>) -> Void
+    ) -> Cancellable {
+        githubProvider.request(target, callbackQueue: Self.responseDecodingQueue) { result in
+            do {
+                switch result {
+                case .success(let response):
+                    let responseHeaders = response.response
+                    let paginationLinkHeader = PaginationLinkHeader(
+                        headerValue: responseHeaders?.value(forHTTPHeaderField: "Link")
+                    )
+                    let entityTag = responseHeaders?.value(forHTTPHeaderField: "ETag")
+
+                    if response.statusCode == 304 {
+                        completion(.success(PaginatedResponse(
+                            elements: [],
+                            nextPageNumber: paginationLinkHeader.nextPageNumber,
+                            lastPageNumber: paginationLinkHeader.lastPageNumber,
+                            entityTag: entityTag,
+                            isNotModified: true
+                        )))
+                    } else {
+                        let decodedElements = try response.map([DecodedElement].self)
+                        completion(.success(PaginatedResponse(
+                            elements: decodedElements,
+                            nextPageNumber: paginationLinkHeader.nextPageNumber,
+                            lastPageNumber: paginationLinkHeader.lastPageNumber,
+                            entityTag: entityTag,
+                            isNotModified: false
+                        )))
+                    }
                 case .failure(let failure):
                     throw failure
                 }

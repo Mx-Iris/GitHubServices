@@ -82,6 +82,8 @@ public protocol RestAPI {
 
     // MARK: - Authentication is required
 
+    func authenticatedUserStarredRepositories(sort: APIParameter.Sort?, direction: APIParameter.Direction?, numberOfPerPage: Int?, page: Int, entityTag: String?, completion: @escaping (Result<PaginatedResponse<Repository>, Error>) -> Void)
+
     func authenticatedUserRepositories(filter: APIParameter.Filter?, sort: APIParameter.Sort?, direction: APIParameter.Direction?, numberOfPerPage: Int?, page: Int?, since: Date?, before: Date?, completion: @escaping (Result<[Repository], Error>) -> Void)
 
     func allAuthenticatedUserRepositories(filter: APIParameter.Filter?, completion: @escaping (Result<[Repository], Error>) -> Void)

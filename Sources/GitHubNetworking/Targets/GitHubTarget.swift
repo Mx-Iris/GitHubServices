@@ -34,6 +34,7 @@ package enum GitHubTarget {
     case searchRepositories(query: String, sort: String, order: String, page: Int)
     case userRepositories(username: String, type: APIParameter.RepositoriesType?, sort: APIParameter.Sort?, page: Int, numberOfPerPage: Int?)
     case userStarredRepositories(username: String, sort: APIParameter.Sort?, direction: APIParameter.Direction?, numberOfPerPage: Int?, page: Int)
+    case authenticatedUserStarredRepositories(sort: APIParameter.Sort?, direction: APIParameter.Direction?, numberOfPerPage: Int?, page: Int, entityTag: String?)
     case userWatchingRepositories(username: String, page: Int)
     case organizationRepositories(organization: String, type: APIParameter.RepositoriesType?, sort: APIParameter.Sort?, direction: APIParameter.Direction?, numberOfPerPage: Int?, page: Int?)
     case authenticatedUserRepositories(filter: APIParameter.Filter?, sort: APIParameter.Sort?, direction: APIParameter.Direction?, numberOfPerPage: Int?, page: Int?, since: Date?, before: Date?)
@@ -127,6 +128,7 @@ extension GitHubTarget: TargetType {
         case let .organizationEvents(username, _): "/orgs/\(username)/events"
 
         case .authenticatedUser: "/user"
+        case .authenticatedUserStarredRepositories: "/user/starred"
         case .authenticatedUserOrganizations: "/user/orgs"
         case .notifications,
              .markAsReadNotifications: "/notifications"
@@ -170,7 +172,16 @@ extension GitHubTarget: TargetType {
     }
 
     package var headers: [String: String]? {
-        nil
+        switch self {
+        case let .authenticatedUserStarredRepositories(_, _, _, _, entityTag):
+            var requestHeaders = ["Accept": "application/vnd.github+json"]
+            if let entityTag {
+                requestHeaders["If-None-Match"] = entityTag
+            }
+            return requestHeaders
+        default:
+            return nil
+        }
     }
 
     package var parameters: [String: Any]? {
@@ -228,6 +239,13 @@ extension GitHubTarget: TargetType {
                 sort
                 direction
                 APIParameter.numberOfPerPage(numberOfPage ?? 0)
+                APIParameter.page(page)
+            }
+        case let .authenticatedUserStarredRepositories(sort, direction, numberOfPerPage, page, _):
+            APIParameterBuilder.build(&params) {
+                sort
+                direction
+                APIParameter.numberOfPerPage(numberOfPerPage ?? 0)
                 APIParameter.page(page)
             }
         case let .userWatchingRepositories(_, page):

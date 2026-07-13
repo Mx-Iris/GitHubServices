@@ -41,6 +41,7 @@ RxGitHubServices                      Rx wrapper over services
   - Codetabs (`api.codetabs.com`) → `CodetabsTarget` / `CodetabsProvider`
   - GraphQL (`api.github.com/graphql`) → Apollo `ApolloClient` (`client` for public token, `privateClient` for `privateToken`).
   All providers wrap a generic `OnlineProvider<Target>`, which centralizes success-status filtering and maps 404 → `APIError.resourceNotFound`, other failures → `APIError.serverError`. Endpoint base URLs live in `Misc/Configs.swift`.
+  - The authenticated `/user/starred` endpoint returns `PaginatedResponse<Repository>` with parsed `Link` page numbers, `ETag`, and `304 Not Modified` state. Its large response pages are decoded on a dedicated background queue; do not change the callback queue behavior of legacy request helpers when extending this path.
 - **RxGitHubNetworking** — `RxGitHubClient: RxGitHubAPI`, RxSwift/RxMoya/RxApolloClient mirror of the client.
 - **GitHubServices** — Workflows on top of the client: `BackupService`, `ExportService` (`RepositoriesJSONExporter` / `RepositoriesMarkdownExporter`), `WorkflowService`. Uses **swift-git** (`Git`) for cloning and **MarkdownBuilder** for Markdown generation. Services depend on the `GitHubAPI` protocol, not the concrete client.
 - **RxGitHubServices** — Rx wrappers (`Cloner+Rx`, `RepositoriesExporter+Rx`).

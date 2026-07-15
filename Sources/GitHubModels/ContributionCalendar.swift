@@ -1,14 +1,14 @@
 import Foundation
 
-public struct ContributionCalendar: Codable, Hashable {
-    public struct Month: Codable, Hashable {
+public struct ContributionCalendar: Codable, Hashable, Sendable {
+    public struct Month: Codable, Hashable, Sendable {
         public var name: String?
         public init(name: String? = nil) {
             self.name = name
         }
     }
 
-    public struct ContributionDay: Codable, Hashable {
+    public struct ContributionDay: Codable, Hashable, Sendable {
         public var color: String?
         public var contributionCount: Int?
         public init(color: String? = nil, contributionCount: Int? = nil) {

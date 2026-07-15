@@ -4,7 +4,7 @@ import HelperCoders
 
 @Codable
 @MemberInit
-public struct User: Hashable {
+public struct User: Hashable, Sendable {
     @CodedAt("avatar_url")
     public var avatarURL: URL? // A URL pointing to the user's public avatar.
     public var blog: String? // A URL pointing to the user's public website/blog.

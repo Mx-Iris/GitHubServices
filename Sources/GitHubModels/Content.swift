@@ -1,7 +1,7 @@
 import Foundation
 import MetaCodable
 
-public enum ContentType: String, Codable {
+public enum ContentType: String, Codable, Sendable {
     case file
     case dir
     case symlink
@@ -27,7 +27,7 @@ extension ContentType: Comparable {
 
 @Codable
 @MemberInit
-public struct Content {
+public struct Content: Sendable {
     public var type: ContentType
     public var size: Int
     public var name: String

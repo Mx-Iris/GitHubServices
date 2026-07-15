@@ -1,13 +1,13 @@
 import Foundation
 import MetaCodable
 
-public enum GraphQL {
+public enum GraphQL: Sendable {
     
 }
 
 @Codable
 @MemberInit
-public struct UserList {
+public struct UserList: Sendable {
     public let id: String
     public let name: String
     public let isPrivate: Bool
@@ -18,7 +18,7 @@ public struct UserList {
 
 @Codable
 @MemberInit
-public struct List {
+public struct List: Sendable {
     public let owner: Owner
     public let userList: UserList
     public let starredRepos: StarredRepos
@@ -26,10 +26,10 @@ public struct List {
 
 @Codable
 @MemberInit
-public struct StarredRepos {
+public struct StarredRepos: Sendable {
     @Codable
     @MemberInit
-    public struct PageInfo {
+    public struct PageInfo: Sendable {
         public let hasNextPage: Bool
         public let endCursor: String?
     }
@@ -40,7 +40,7 @@ public struct StarredRepos {
 
 @Codable
 @MemberInit
-public struct Owner {
+public struct Owner: Sendable {
     public let id: String
     public let login: String
     public let isViewer: Bool?
@@ -50,10 +50,10 @@ public struct Owner {
 
 @Codable
 @MemberInit
-public struct RepositoryListItem {
+public struct RepositoryListItem: Sendable {
     @Codable
     @MemberInit
-    public struct Parent {
+    public struct Parent: Sendable {
         public let id: String
         public let name: String
         public let owner: Owner

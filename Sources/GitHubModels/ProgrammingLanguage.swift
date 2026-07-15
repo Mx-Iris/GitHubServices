@@ -1,6 +1,6 @@
-public enum ProgrammingLanguage: String, Codable, Hashable {
+public enum ProgrammingLanguage: String, Codable, Hashable, Sendable {
 
-    public enum `Type`: String {
+    public enum `Type`: String, Sendable {
         case prose = "prose"
         case markup = "markup"
         case programming = "programming"

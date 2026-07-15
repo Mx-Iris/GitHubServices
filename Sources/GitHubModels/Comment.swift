@@ -4,7 +4,7 @@ import HelperCoders
 
 @Codable
 @MemberInit
-public struct Comment {
+public struct Comment: Sendable {
     @CodedAt("author_association")
     public var authorAssociation: String?
     

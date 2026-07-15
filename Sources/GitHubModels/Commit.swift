@@ -3,7 +3,7 @@ import MetaCodable
 
 @Codable
 @MemberInit
-public struct Commit {
+public struct Commit: Sendable {
     public var url: URL?
     public var commit: CommitInfo?
     public var files: [File]?
@@ -21,7 +21,7 @@ public struct Commit {
 
 @Codable
 @MemberInit
-public struct CommitInfo: Codable {
+public struct CommitInfo: Codable, Sendable {
     public var author: Committer?
     public var committer: Committer?
     public var message: String?
@@ -33,7 +33,7 @@ public struct CommitInfo: Codable {
 
 @Codable
 @MemberInit
-public struct Stat {
+public struct Stat: Sendable {
     public var additions: Int?
     public var deletions: Int?
     public var total: Int?
@@ -41,7 +41,7 @@ public struct Stat {
 
 @Codable
 @MemberInit
-public struct File {
+public struct File: Sendable {
     public var additions: Int?
     public var changes: Int?
     public var deletions: Int?
@@ -56,7 +56,7 @@ public struct File {
 
 @Codable
 @MemberInit
-public struct Verification {
+public struct Verification: Sendable {
     public var payload: String?
     public var reason: String
     public var signature: String?

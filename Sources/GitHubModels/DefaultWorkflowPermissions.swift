@@ -1,14 +1,14 @@
 import Foundation
 import MetaCodable
 
-public enum DefaultWorkflowPermissions: String, Codable {
+public enum DefaultWorkflowPermissions: String, Codable, Sendable {
     case read
     case write
 }
 
 @Codable
 @MemberInit
-public struct DefaultWorkflowPermissionsInfo {
+public struct DefaultWorkflowPermissionsInfo: Sendable {
     @CodedAt("default_workflow_permissions")
     let defaultWorkflowPermissions: DefaultWorkflowPermissions
     

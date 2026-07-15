@@ -1,6 +1,6 @@
 import Foundation
 
-public protocol Testable: Codable {
+public protocol Testable: Codable, Sendable {
     static var resourceName: String { get }
     
 }

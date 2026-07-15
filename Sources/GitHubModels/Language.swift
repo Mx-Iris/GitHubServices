@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Language: Codable, Hashable {
+public struct Language: Codable, Hashable, Sendable {
     public var urlParam: String?
     public var name: String?
 
@@ -17,7 +17,7 @@ extension Language: Equatable {
     }
 }
 
-public struct Languages: Codable, Hashable {
+public struct Languages: Codable, Hashable, Sendable {
     public var totalCount: Int = 0
     public var totalSize: Int = 0
     public var languages: [RepoLanguage] = []
@@ -25,14 +25,14 @@ public struct Languages: Codable, Hashable {
     public init() {}
 }
 
-public struct RepoLanguage: Codable, Hashable {
+public struct RepoLanguage: Codable, Hashable, Sendable {
     public var size: Int = 0
     public var name: String?
     public var color: String?
     public init() {}
 }
 
-public struct LanguageLines: Codable, Hashable {
+public struct LanguageLines: Codable, Hashable, Sendable {
     public var language: String?
     public var files: Int?
     public var lines: Int?

@@ -4,7 +4,7 @@ import HelperCoders
 
 @Codable
 @MemberInit
-public struct PullRequest: Codable {
+public struct PullRequest: Codable, Sendable {
     @CodedAt("active_lock_reason")
     public var activeLockReason: String?
     public var additions: Int?

@@ -4,7 +4,7 @@ import HelperCoders
 
 @Codable
 @MemberInit
-public struct Release: Codable {
+public struct Release: Codable, Sendable {
     public var assets: [Asset]?
     @CodedAt("assets_url")
     public var assetsURL: URL?
@@ -39,7 +39,7 @@ public struct Release: Codable {
 
 @Codable
 @MemberInit
-public struct Asset: Codable {
+public struct Asset: Codable, Sendable {
     @CodedAt("browser_download_url")
     public var browserDownloadURL: URL?
     @CodedAt("content_type")

@@ -4,7 +4,7 @@ import HelperCoders
 
 @Codable
 @MemberInit
-public struct Workflow: Codable {
+public struct Workflow: Codable, Sendable {
     public let id: Int
     @CodedAt("node_id")
     public let nodeID: String

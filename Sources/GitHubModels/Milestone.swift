@@ -4,7 +4,7 @@ import HelperCoders
 
 @Codable
 @MemberInit
-public struct Milestone: Codable {
+public struct Milestone: Codable, Sendable {
     @CodedBy(ISO8601DateCoder())
     @CodedAt("closed_at")
     public var closedAt: Date?

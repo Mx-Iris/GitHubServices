@@ -4,7 +4,7 @@ import HelperCoders
 
 @Codable
 @MemberInit
-public struct Notification: Codable {
+public struct Notification: Codable, Sendable {
     public var id: String?
     @CodedBy(ISO8601DateCoder())
     @CodedAt("last_read_at")
@@ -29,7 +29,7 @@ extension Notification: Equatable {
 
 @Codable
 @MemberInit
-public struct Subject: Codable {
+public struct Subject: Codable, Sendable {
     @CodedAt("latest_comment_url")
     public var latestCommentURL: URL?
     public var title: String?

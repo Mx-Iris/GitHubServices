@@ -4,7 +4,7 @@ import HelperCoders
 
 @Codable
 @MemberInit
-public struct Issue: Codable {
+public struct Issue: Codable, Sendable {
     @CodedAt("active_lock_reason")
     public var activeLockReason: String?
     public var assignee: User?
@@ -49,7 +49,7 @@ public struct Issue: Codable {
 
 @Codable
 @MemberInit
-public struct IssueLabel: Codable {
+public struct IssueLabel: Codable, Sendable {
     public var color: String?
     @CodedAt("default")
     public var defaultField: Bool?

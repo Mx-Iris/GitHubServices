@@ -4,7 +4,7 @@ import HelperCoders
 
 @Codable
 @Inherits(decodable: false, encodable: false)
-public final class Repository {
+public final class Repository: Sendable {
     @CodedAt("archived")
     @Default(false)
     public let isArchived: Bool

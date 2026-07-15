@@ -34,7 +34,7 @@ GitHubServices   RxGitHubNetworking   high-level services / RxSwift wrapper
 RxGitHubServices                      Rx wrapper over services
 ```
 
-- **GitHubModels** — Plain Codable types. Uses **MetaCodable** macros instead of hand-written `CodingKeys`: `@Codable`, `@CodedAt("snake_case_key")`, `@CodedBy(ISO8601DateCoder())` for dates, `@Default(...)` for fallbacks, `@Inherits(decodable:encodable:)` on classes. When adding a model field, annotate the JSON mapping with these macros rather than writing a `CodingKeys` enum.
+- **GitHubModels** — Plain Codable types. Uses **MetaCodable** macros instead of hand-written `CodingKeys`: `@Codable`, `@CodedAt("snake_case_key")`, `@CodedBy(ISO8601DateCoder())` for dates, `@Default(...)` for fallbacks, `@Inherits(decodable:encodable:)` on classes. When adding a model field, annotate the JSON mapping with these macros rather than writing a `CodingKeys` enum. 所有模型及其嵌套类型必须使用编译器可检查的 `Sendable` conformance；不要使用 `@unchecked Sendable` 绕过存储属性检查，并在新增类型时同步更新 `GitHubModelsSendableTests` 的编译期清单。
 - **GitHubNetworking** — The core. `GitHubClient: GitHubAPI` is the concrete implementation, where `GitHubAPI = RestAPI & GraphQLAPI`. Talks to three backends, each with its own Moya `TargetType` enum + `Provider`:
   - GitHub REST (`api.github.com`) → `GitHubTarget` / `GitHubProvider`
   - Trending (`gtrend.yapie.me`) → `TrendingGitHubTarget` / `TrendingGitHubProvider`

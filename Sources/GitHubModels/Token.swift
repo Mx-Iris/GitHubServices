@@ -1,7 +1,7 @@
 import Foundation
 
 
-public enum TokenType: Codable, Hashable {
+public enum TokenType: Codable, Hashable, Sendable {
     case basic(token: String)
     case personal(token: String)
     case oAuth(token: String)
@@ -17,7 +17,7 @@ public enum TokenType: Codable, Hashable {
     }
 }
 
-public struct Token: Codable {
+public struct Token: Codable, Sendable {
     /// Basic
     public var basicToken: String?
 
@@ -41,7 +41,7 @@ public struct Token: Codable {
         self.accessToken = accessToken
     }
     
-    enum CodingKeys: String, CodingKey {
+    enum CodingKeys: String, CodingKey, Sendable {
         case basicToken = "basic_token"
         case personalToken = "personal_token"
         case accessToken = "access_token"

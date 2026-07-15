@@ -4,7 +4,7 @@ import HelperCoders
 
 @Codable
 @MemberInit
-public struct Committer {
+public struct Committer: Sendable {
     public var name: String
     public var email: String
 

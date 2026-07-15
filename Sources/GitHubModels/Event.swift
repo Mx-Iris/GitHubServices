@@ -13,7 +13,7 @@ import MetaCodable
 /// - `public`: Triggered when a private repository is open sourced. Without a doubt: the best GitHub event.
 /// - release: Triggered when a release is published.
 /// - star: The WatchEvent is related to starring a repository, not watching.
-public enum EventType: String, Codable, Hashable {
+public enum EventType: String, Codable, Hashable, Sendable {
     case fork = "ForkEvent"
     case commitComment = "CommitCommentEvent"
     case create = "CreateEvent"
@@ -34,7 +34,7 @@ public enum EventType: String, Codable, Hashable {
 
 @Codable
 @MemberInit
-public struct EventRepository {
+public struct EventRepository: Sendable {
     public let id: Int
 
     public let name: String
@@ -43,12 +43,12 @@ public struct EventRepository {
 }
 
 /// Each event has a similar JSON schema, but a unique payload object that is determined by its event type.
-public struct Event: Codable {
-    private static let iso8601DateFormatter: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = .withInternetDateTime
-        return formatter
-    }()
+public struct Event: Codable, Sendable {
+    private static func makeISO8601DateFormatter() -> ISO8601DateFormatter {
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = .withInternetDateTime
+        return dateFormatter
+    }
 
     public var actor: User?
     public var createdAt: Date?
@@ -61,7 +61,7 @@ public struct Event: Codable {
 
     public init() {}
 
-    public enum CodingKeys: String, CodingKey {
+    public enum CodingKeys: String, CodingKey, Sendable {
         case actor
         case createdAt = "created_at"
         case id
@@ -73,10 +73,11 @@ public struct Event: Codable {
     }
 
     public func encode(to encoder: Encoder) throws {
+        let dateFormatter = Self.makeISO8601DateFormatter()
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(actor, forKey: .actor)
         if let createdAt {
-            try container.encode(Self.iso8601DateFormatter.string(from: createdAt), forKey: .createdAt)
+            try container.encode(dateFormatter.string(from: createdAt), forKey: .createdAt)
         }
         try container.encodeIfPresent(id, forKey: .id)
         try container.encodeIfPresent(organization, forKey: .organization)
@@ -90,10 +91,11 @@ public struct Event: Codable {
     }
 
     public init(from decoder: Decoder) throws {
+        let dateFormatter = Self.makeISO8601DateFormatter()
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.actor = try container.decodeIfPresent(User.self, forKey: .actor)
         self.createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt).flatMap {
-            Self.iso8601DateFormatter.date(from: $0)
+            dateFormatter.date(from: $0)
         }
         self.id = try container.decodeIfPresent(String.self, forKey: .id)
         self.organization = try container.decodeIfPresent(User.self, forKey: .organization)
@@ -129,13 +131,13 @@ extension Event: Equatable, Hashable {
     }
 }
 
-public protocol Payload: Codable {}
+public protocol Payload: Codable, Sendable {}
 
 public struct EmptyPayload: Payload {}
 
 @Codable
 @MemberInit
-public struct ForkRepository {
+public struct ForkRepository: Sendable {
     @CodedAt("node_id")
     public let nodeID: String
 
@@ -150,7 +152,7 @@ public struct ForkRepository {
 public struct ForkPayload: Payload {
     public var repository: ForkRepository?
 
-    public enum CodingKeys: String, CodingKey {
+    public enum CodingKeys: String, CodingKey, Sendable {
         case repository = "forkee"
     }
 }
@@ -160,7 +162,7 @@ public struct DeletePayload: Payload {
     public var refType: DeleteEventType = .repository
     public var pusherType: String?
 
-    public enum CodingKeys: String, CodingKey {
+    public enum CodingKeys: String, CodingKey, Sendable {
         case ref
         case refType = "ref_type"
         case pusherType = "pusher_type"
@@ -172,7 +174,7 @@ public struct IssueCommentPayload: Payload {
     public var issue: Issue?
     public var comment: Comment?
 
-    public enum CodingKeys: String, CodingKey {
+    public enum CodingKeys: String, CodingKey, Sendable {
         case action
         case issue
         case comment
@@ -183,13 +185,13 @@ public struct MemberPayload: Payload {
     public var action: String?
     public var member: User?
 
-    public enum CodingKeys: String, CodingKey {
+    public enum CodingKeys: String, CodingKey, Sendable {
         case action
         case member
     }
 }
 
-public enum CreateEventType: String, Codable {
+public enum CreateEventType: String, Codable, Sendable {
     case repository
     case branch
     case tag
@@ -202,7 +204,7 @@ public struct CreatePayload: Payload {
     public var description: String?
     public var pusherType: String?
 
-    public enum CodingKeys: String, CodingKey {
+    public enum CodingKeys: String, CodingKey, Sendable {
         case ref
         case refType = "ref_type"
         case masterBranch = "master_branch"
@@ -211,7 +213,7 @@ public struct CreatePayload: Payload {
     }
 }
 
-public enum DeleteEventType: String, Codable {
+public enum DeleteEventType: String, Codable, Sendable {
     case repository
     case branch
     case tag
@@ -222,7 +224,7 @@ public struct IssuesPayload: Payload {
     public var issue: Issue?
     public var repository: Repository?
 
-    public enum CodingKeys: String, CodingKey {
+    public enum CodingKeys: String, CodingKey, Sendable {
         case action
         case issue
         case repository = "forkee"
@@ -234,7 +236,7 @@ public struct PullRequestReviewCommentPayload: Payload {
     public var comment: Comment?
     public var pullRequest: PullRequest?
 
-    public enum CodingKeys: String, CodingKey {
+    public enum CodingKeys: String, CodingKey, Sendable {
         case action
         case comment
         case pullRequest = "pull_request"
@@ -253,7 +255,7 @@ public struct ReleasePayload: Payload {
     public var action: String?
     public var release: Release?
 
-    public enum CodingKeys: String, CodingKey {
+    public enum CodingKeys: String, CodingKey, Sendable {
         case action
         case release
     }
@@ -264,7 +266,7 @@ public struct PullRequestPayload: Payload {
     public var number: Int?
     public var pullRequest: PullRequest?
 
-    public enum CodingKeys: String, CodingKey {
+    public enum CodingKeys: String, CodingKey, Sendable {
         case action
         case number
         case pullRequest = "pull_request"
@@ -274,7 +276,7 @@ public struct PullRequestPayload: Payload {
 public struct StarPayload: Payload {
     public var action: String?
 
-    public enum CodingKeys: String, CodingKey {
+    public enum CodingKeys: String, CodingKey, Sendable {
         case action
     }
 }

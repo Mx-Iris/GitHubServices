@@ -4,7 +4,7 @@ import MetaCodable
 
 @Codable
 @MemberInit
-public struct TrendingUser: Codable {
+public struct TrendingUser: Codable, Sendable {
     public var username: String
     public var name: String?
     public var url: URL?

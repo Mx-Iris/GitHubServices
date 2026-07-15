@@ -3,7 +3,7 @@ import MetaCodable
 
 @Codable
 @MemberInit
-public struct Branch {
+public struct Branch: Sendable {
     ///    var links: Link?
     public var commit: Commit?
     public var name: String?

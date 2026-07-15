@@ -36,7 +36,7 @@ public struct DeviceCode: Codable, Sendable, Equatable {
         self.interval = interval
     }
 
-    enum CodingKeys: String, CodingKey {
+    enum CodingKeys: String, CodingKey, Sendable {
         case deviceCode = "device_code"
         case userCode = "user_code"
         case verificationURI = "verification_uri"

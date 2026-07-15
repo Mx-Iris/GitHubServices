@@ -3,7 +3,7 @@ import MetaCodable
 
 @Codable
 @MemberInit
-public struct TrendingRepository: Codable {
+public struct TrendingRepository: Codable, Sendable {
     public var author: String
     public var name: String
     public var url: URL?

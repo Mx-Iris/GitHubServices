@@ -3,7 +3,7 @@ import MetaCodable
 
 @Codable
 @MemberInit
-public struct License: Codable, Hashable {
+public struct License: Codable, Hashable, Sendable {
     public var key: String?
     public var name: String?
     @CodedAt("node_id")

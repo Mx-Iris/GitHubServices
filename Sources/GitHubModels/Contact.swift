@@ -4,7 +4,7 @@ import MetaCodable
 
 @Codable
 @MemberInit
-public struct Contact: Codable {
+public struct Contact: Codable, Sendable {
     public var id: String?
     public var name: String?
     public var phones: [String] = []
